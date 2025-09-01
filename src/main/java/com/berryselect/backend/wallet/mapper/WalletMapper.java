@@ -1,10 +1,7 @@
 package com.berryselect.backend.wallet.mapper;
 
 import com.berryselect.backend.wallet.domain.UserAsset;
-import com.berryselect.backend.wallet.dto.response.AssetResponse;
-import com.berryselect.backend.wallet.dto.response.MembershipResponse;
-import com.berryselect.backend.wallet.dto.response.MembershipSummaryResponse;
-import com.berryselect.backend.wallet.dto.response.WalletSummaryResponse;
+import com.berryselect.backend.wallet.dto.response.*;
 
 public final class WalletMapper {
     private WalletMapper() {}
@@ -56,6 +53,34 @@ public final class WalletMapper {
                 ua.getProduct().getName(),
                 ua.getExternalNo(),
                 ua.getLevel()
+        );
+    }
+
+    /**
+     * =====================
+     * Gifticon
+     * =====================
+     */
+    public static GifticonSummaryResponse.GifticonSummary toGifticonSummary(UserAsset ua) {
+        return new GifticonSummaryResponse.GifticonSummary(
+                ua.getId(),
+                ua.getProduct().getName(),
+                ua.getBarcode(),
+                ua.getBalance(),
+                ua.getExpiresAt() != null ? ua.getExpiresAt().toString() : null,
+                ua.getGifticonStatus()
+        );
+    }
+
+    public static GifticonResponse toGifticonDetail(UserAsset ua) {
+        return new GifticonResponse(
+                ua.getId(),
+                "GIFTICON",
+                ua.getProduct().getName(),
+                ua.getBarcode(),
+                ua.getBalance(),
+                ua.getExpiresAt() != null ? ua.getExpiresAt().toString() : null,
+                ua.getGifticonStatus()
         );
     }
 }

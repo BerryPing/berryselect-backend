@@ -1,5 +1,7 @@
 package com.berryselect.backend.wallet.domain;
 
+import com.berryselect.backend.wallet.domain.type.AssetType;
+import com.berryselect.backend.wallet.domain.type.GifticonStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,6 +27,10 @@ public class UserAsset {
     @Column(name = "asset_type", nullable = false, length = 20)
     private AssetType assetType;  // CARD/MEMBERSHIP/GIFTICON
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gifticon_status")
+    private GifticonStatus gifticonStatus;  // ACTIVE/USED/EXPIRED
+
     @Column(length = 4)
     private String last4;
 
@@ -42,7 +48,6 @@ public class UserAsset {
     @Column(name = "limit_expected")
     private Integer limitExpected;
 
-    private LocalDate expiredAt;
-    private String status;
+    private LocalDate expiresAt;
 }
 

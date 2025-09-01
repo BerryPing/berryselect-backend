@@ -1,7 +1,7 @@
 package com.berryselect.backend.wallet.repository;
 
 import com.berryselect.backend.wallet.domain.UserAsset;
-import com.berryselect.backend.wallet.domain.AssetType;
+import com.berryselect.backend.wallet.domain.type.AssetType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
