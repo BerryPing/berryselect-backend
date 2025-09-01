@@ -1,7 +1,7 @@
 package com.berryselect.backend.wallet.service;
 
 import com.berryselect.backend.wallet.domain.UserAsset;
-import com.berryselect.backend.wallet.domain.type.AssetType;
+import com.berryselect.backend.wallet.domain.AssetType;
 import com.berryselect.backend.wallet.dto.request.MembershipCreateRequest;
 import com.berryselect.backend.wallet.dto.response.AssetResponse;
 import com.berryselect.backend.wallet.dto.response.MembershipResponse;

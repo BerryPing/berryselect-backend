@@ -1,4 +1,4 @@
-package com.berryselect.backend.wallet.domain.type;
+package com.berryselect.backend.wallet.domain;
 
 public enum AssetType {
     CARD, MEMBERSHIP, GIFTICON

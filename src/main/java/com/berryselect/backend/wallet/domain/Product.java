@@ -3,7 +3,6 @@ package com.berryselect.backend.wallet.domain;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import com.berryselect.backend.wallet.domain.type.AssetType;
 
 @Entity
 @Table(name = "products")

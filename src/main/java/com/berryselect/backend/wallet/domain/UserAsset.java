@@ -1,6 +1,5 @@
 package com.berryselect.backend.wallet.domain;
 
-import com.berryselect.backend.wallet.domain.type.AssetType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
