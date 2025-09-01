@@ -122,13 +122,13 @@ public class WalletService {
         UserAsset ua = new UserAsset();
         ua.setUserId(userId);
         ua.setProduct(
-                productRepository.findById(req.productId())
+                productRepository.findById(req.getProductId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid product"))
         );
         ua.setAssetType(AssetType.GIFTICON);
-        ua.setBarcode(req.barcode());
-        ua.setBalance(req.balance());
-        ua.setExpiresAt(req.expiresAt() != null ? java.time.LocalDate.parse(req.expiresAt()) : null);
+        ua.setBarcode(req.getBarcode());
+        ua.setBalance(req.getBalance());
+        ua.setExpiresAt(req.getExpiresAt() != null ? java.time.LocalDate.parse(req.getExpiresAt()) : null);
         ua.setGifticonStatus(GifticonStatus.ACTIVE);
 
         UserAsset saved = userAssetRepository.save(ua);

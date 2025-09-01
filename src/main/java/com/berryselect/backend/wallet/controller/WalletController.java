@@ -6,6 +6,7 @@ import com.berryselect.backend.wallet.dto.request.MembershipCreateRequest;
 import com.berryselect.backend.wallet.dto.response.*;
 import com.berryselect.backend.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -100,12 +101,31 @@ public class WalletController {
         return ResponseEntity.ok(walletService.getGifticonDetail(userId, gifticonId));
     }
 
-    @PostMapping("/gifticons")
-    public ResponseEntity<GifticonResponse> createGifticon(
+    // 1. 기프티콘 등록 - 번호 등록
+    @PostMapping(value = "/gifticons", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GifticonResponse> createGifticonJson(
             @RequestHeader(name = "X-User-Id", required = false) Long userIdHeader,
             @RequestBody GifticonCreateRequest req
     ) {
         Long userId = (userIdHeader != null) ? userIdHeader : 1L;
+        return ResponseEntity.ok(walletService.createGifticon(userId, req));
+    }
+
+    // 2. 기프티콘 등록 - 이미지 등록 (이미지는 읽기만 하고 DB 저장 X)
+    @PostMapping(value = "/gifticons", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<GifticonResponse> createGifticonMultipart(
+            @RequestHeader(name = "X-User-Id", required = false) Long userIdHeader,
+            @ModelAttribute GifticonCreateRequest req
+    ) {
+        Long userId = (userIdHeader != null) ? userIdHeader : 1L;
+
+        if (req.getImage() != null && !req.getImage().isEmpty()) {
+            try {
+                byte[] bytes = req.getImage().getBytes();
+                // TODO: 필요 시 OCR/바코드 인식 등 임시 처리 (DB 보관 X)
+            } catch (Exception ignore) { /* 실패해도 등록은 진행 */ }
+        }
+
         return ResponseEntity.ok(walletService.createGifticon(userId, req));
     }
 
