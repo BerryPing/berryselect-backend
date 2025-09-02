@@ -41,6 +41,7 @@ public class JwtProvider {
                 .build();
     }
 
+    // createAccessToken -> 로그인 성공 시 JWT 발급
     // GrantedAuthority 형태로 받은 권한도 지원
     public String createAccessToken(String subject, Collection<? extends GrantedAuthority> authorities) {
         List<String> roles = (authorities == null)
@@ -63,6 +64,7 @@ public class JwtProvider {
                 .compact();
     }
 
+    // 요청 때 JWT 검증/파싱
     public Claims parseClaims(String token){
         return parser.parseClaimsJws(token).getBody();
     }

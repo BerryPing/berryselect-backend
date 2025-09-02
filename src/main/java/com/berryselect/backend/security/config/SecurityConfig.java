@@ -19,9 +19,9 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // 세션-폼로그인 사용 안하므로 CSRF off
                 .cors(Customizer.withDefaults())  // ← CORS 활성화
-                // 세션 무상태 (JWT)
+                // STATELESS (JWT) 매 요청 JWT로 인증
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // 폼로그인/HTTP Basic 비활성화 (JWT만 사용)
                 .formLogin(f1-> f1.disable())
@@ -29,7 +29,7 @@ public class SecurityConfig {
                 // 인가규칙
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**","/actuator/health").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated() // 나머지는 JWT 필요, 토큰 없으면 401
                 )
                 .build();
     }
@@ -39,7 +39,7 @@ public class SecurityConfig {
         CorsConfiguration cfg = new CorsConfiguration();
 
         cfg.setAllowedOrigins(List.of(
-                "http://localhost:5173" // Vite dev
+                "http://localhost:5173" // 프론트 개발 서버 도메인/포트
         ));
         cfg.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
