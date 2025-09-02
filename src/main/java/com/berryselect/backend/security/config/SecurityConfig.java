@@ -15,6 +15,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 import java.util.List;
 
@@ -23,7 +24,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter; //
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http, RestAuthEntryPoint restAuthEntryPoint, RestAccessDeniedHandler restAccessDeniedHandler) throws Exception {
@@ -43,6 +44,18 @@ public class SecurityConfig {
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(restAuthEntryPoint)
                         .accessDeniedHandler(restAccessDeniedHandler))
+                .headers(h -> h
+                        .frameOptions(frame -> frame.deny()) // X-Frame-Options: DENY (클릭재킹 방지)
+                        .contentTypeOptions(Customizer.withDefaults()) // X-Content-Type-Options: nosniff(MIME 스니핑 방지)
+                        .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                        .httpStrictTransportSecurity(hsts -> hsts   // HSTS (HTTPS에서만 의미)
+                                .includeSubDomains(true)
+                                .preload(true)
+                                .maxAgeInSeconds(31536000) // 1년
+                        )
+                        // API면 최소 CSP. (Swagger 쓰면 아래 줄을 완화하거나 주석 처리)
+                        .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'"))
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
