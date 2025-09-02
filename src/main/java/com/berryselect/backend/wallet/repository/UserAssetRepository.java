@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserAssetRepository extends JpaRepository<UserAsset, Long> {
-    List<UserAsset> findByUserId(String userId);
+    List<UserAsset> findByUserId(Long userId);
 
     @EntityGraph(attributePaths = "product")
     List<UserAsset> findByUserIdAndAssetTypeOrderByIdDesc(Long userId, AssetType assetType);
