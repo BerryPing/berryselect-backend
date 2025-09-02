@@ -1,5 +1,7 @@
 package com.berryselect.backend.security.config;
 
+import com.berryselect.backend.security.handler.RestAccessDeniedHandler;
+import com.berryselect.backend.security.handler.RestAuthEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -17,7 +19,7 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, RestAuthEntryPoint restAuthEntryPoint, RestAccessDeniedHandler restAccessDeniedHandler) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable()) // 세션-폼로그인 사용 안하므로 CSRF off
                 .cors(Customizer.withDefaults())  // ← CORS 활성화
@@ -31,6 +33,9 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**","/actuator/health").permitAll()
                         .anyRequest().authenticated() // 나머지는 JWT 필요, 토큰 없으면 401
                 )
+                .exceptionHandling(eh -> eh
+                        .authenticationEntryPoint(restAuthEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler))
                 .build();
     }
 
