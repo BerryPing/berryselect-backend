@@ -26,6 +26,9 @@ public class JwtProvider {
     @Value("${jwt.access-token-exp}")
     private long accessTokenExpMs;
 
+    @Value("${jwt.refresh-token-exp}")
+    private long refreshTokenExpMs;
+
     @Value("${jwt.issuer:berryselect_backend}")
     private String issuer;
 
@@ -62,6 +65,34 @@ public class JwtProvider {
                 .setIssuer(issuer)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String createRefreshToken(String subject){
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + refreshTokenExpMs);
+        String jti = java.util.UUID.randomUUID().toString();
+
+        return Jwts.builder()
+                .setSubject(subject) // sub: 사용자 식별자
+                .setId(jti) // jti: 토큰 고유 ID (회전/블랙리스트용)
+                .claim("token_type", "refresh")  // ← 구분 클레임(권장: token_type)
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .setIssuer(issuer)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public boolean isRefreshToken(String token) {
+        try {
+            return "refresh".equals(parseClaims(token).get("token_type", String.class));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String getJti(String token) {
+        return parseClaims(token).getId();
     }
 
     // 요청 때 JWT 검증/파싱
