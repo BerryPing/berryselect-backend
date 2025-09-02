@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+//Notification Entity (내부 로직용)
+
 @Entity
 @Table(name = "notifications")
 @Getter
@@ -34,7 +36,7 @@ public class Notification {
     private String body;
 
     @Column(name = "sent_at")
-    private LocalDateTime sendAt;
+    private LocalDateTime sentAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
@@ -72,7 +74,7 @@ public class Notification {
     // 알림 발송 완료 처리
     public void markAsSent() {
         this.status = NotificationStatus.SENT;
-        this.sendAt = LocalDateTime.now();
+        this.sentAt = LocalDateTime.now();
     }
 
     // 알림 발송 실패 처리
