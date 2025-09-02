@@ -9,6 +9,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.http.SessionCreationPolicy;
 
 import java.util.List;
 
@@ -20,8 +21,14 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())  // ← CORS 활성화
+                // 세션 무상태 (JWT)
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // 폼로그인/HTTP Basic 비활성화 (JWT만 사용)
+                .formLogin(f1-> f1.disable())
+                .httpBasic(hb -> hb.disable())
+                // 인가규칙
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**","/actuator/health").permitAll()
+                        .requestMatchers("/auth/**","/actuator/health").permitAll()
                         .anyRequest().authenticated()
                 )
                 .build();
