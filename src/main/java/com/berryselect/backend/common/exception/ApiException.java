@@ -1,7 +1,7 @@
 package com.berryselect.backend.common.exception;
 
- // API 비즈니스 로직 예외
- //Service 계층에서 발생하는 예외들을 처리
+// API 비즈니스 로직 예외
+//Service 계층에서 발생하는 예외들을 처리
 public class ApiException extends RuntimeException {
 
     private String code;
