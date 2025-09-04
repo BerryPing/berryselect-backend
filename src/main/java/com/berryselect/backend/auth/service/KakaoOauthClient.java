@@ -17,7 +17,7 @@ public class KakaoOauthClient {
     // Spring에서 Http요청을 보내는 클라이언트 = 카카오 API에 HTTP 요청을 보내는 도구
     private final WebClient webClient = WebClient.builder().build();
 
-    // 인가 코드 -> 카카오 토큰 교환
+    // 인가 코드 -> 카카오 토큰 교환 : code를 카카오서버에 보내서 카카오 access_token/refresh_token을 받는 단계
     public KakaoTokenResponse exchangeCodeForToken(String code){
         return webClient.post()
                 .uri("https://kauth.kakao.com/oauth/token")
