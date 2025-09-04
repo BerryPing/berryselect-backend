@@ -16,15 +16,18 @@ import java.time.LocalDate;
         uniqueConstraints = @UniqueConstraint(name = "uq_provider_user", columnNames = {"provider", "provider_user_id"})
 )
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     public enum Provider { KAKAO }
-
-    @Id@GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Provider provider;
+
+    @Column(name = "provider_user_id", nullable = false, length = 128)
+    private String providerUserId;
 
     @Lob
     @Column(name = "access_token")

@@ -22,42 +22,42 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
 
-    // code로 카카오 토큰 교환 -> 유저 조회 -> 우리 DB upsert -> 우리 JWT발급
+    /** 1) code로 카카오 토큰 교환 → 2) 유저 조회 → 3) 우리 DB upsert → 4) 우리 JWT 발급 */
     @Transactional
-    public AuthResult loginWithAuthorizationCode(String code){
-        //code -> Kakao token
+    public AuthResult loginWithAuthorizationCode(String code) {
+        // 1) code → Kakao token
         KakaoTokenResponse token = kakaoClient.exchangeCodeForToken(code);
 
-        // kakao access_token으로 유저 정보
+        // 2) Kakao access_token으로 유저 정보
         KakaoUserResponse me = kakaoClient.getUserMe(token.getAccessToken());
         Long kakaoId = me.getId();
 
-        // DB upsert
+        // 3) DB upsert
         User user = userRepository
                 .findByProviderAndProviderUserId(User.Provider.KAKAO, String.valueOf(kakaoId))
-                .orElseGet(()-> User.builder()
+                .orElseGet(() -> User.builder()
                         .provider(User.Provider.KAKAO)
                         .providerUserId(String.valueOf(kakaoId))
                         .build());
 
-        // 이름 : nickname 우선
+        // 이름: nickname 우선
         String nickname = (me.getKakaoAccount() != null
-        && me.getKakaoAccount().getProfile() != null)
+                && me.getKakaoAccount().getProfile() != null)
                 ? me.getKakaoAccount().getProfile().getNickname()
                 : null;
 
-        // 전화번호 : 그대로 저장
+        // 전화번호: 그대로 저장(+82 형식일 수 있음)
         String phone = (me.getKakaoAccount() != null) ? me.getKakaoAccount().getPhoneNumber() : null;
 
-        // 생년월일 : birthyear(YYYY) + birthday(MMDD) -> LocalDate
+        // 생년월일: birthyear(YYYY) + birthday(MMDD) → LocalDate
         LocalDate birth = null;
-        if(me.getKakaoAccount() != null){
-            String by = safe(me.getKakaoAccount().getBirthyear()); // "1996"
-            String bd = safe(me.getKakaoAccount().getBirthday()); // "0923"
-            if(by.length() == 4 && bd.length() == 4){
+        if (me.getKakaoAccount() != null) {
+            String by = safe(me.getKakaoAccount().getBirthyear()); // "1995"
+            String bd = safe(me.getKakaoAccount().getBirthday());  // "0101"
+            if (by.length() == 4 && bd.length() == 4) {
                 int year = Integer.parseInt(by);
-                int month = Integer.parseInt(bd.substring(0,2));
-                int day = Integer.parseInt(bd.substring(2,4));
+                int month = Integer.parseInt(bd.substring(0, 2));
+                int day = Integer.parseInt(bd.substring(2, 4));
                 birth = LocalDate.of(year, month, day);
             }
         }
@@ -65,23 +65,23 @@ public class AuthService {
         user.setName(nickname);
         user.setPhone(phone);
         user.setBirth(birth);
-        user.setAccessToken(token.getAccessToken());
-        user.setRefreshToken(token.getRefreshToken());
-        if(token.getExpiresIn() != null){
-            user.setTokenExpiresAt(Instan.now().plusSeconds(token.getExpiresIn()));
+        user.setAccessToken(token.getAccessToken());     // (권장) 암호화 저장
+        user.setRefreshToken(token.getRefreshToken());   // (권장) 암호화 저장
+        if (token.getExpiresIn() != null) {
+            user.setTokenExpiresAt(Instant.now().plusSeconds(token.getExpiresIn()));
         }
         userRepository.save(user);
 
-        // 우리 서비스 JWT 발급
+        // 4) 우리 서비스 JWT 발급
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
-        String accessJwt = jwtProvider.createAccessToken(String.valueOf(user.getId()), authorities);
+        String accessJwt  = jwtProvider.createAccessToken(String.valueOf(user.getId()), authorities);
         String refreshJwt = jwtProvider.createRefreshToken(String.valueOf(user.getId()));
 
         return new AuthResult(user.getId(), user.getName(), accessJwt, refreshJwt, "Bearer");
     }
 
-    private static String safe(String v) {return v == null ? "" : v;}
+    private static String safe(String v) { return v == null ? "" : v; }
 
-    public record AuthResult(Long userId, String name, String accessToken, String refreshToken, String tokenType){}
-
+    /** 컨트롤러 응답용 간단 DTO */
+    public record AuthResult(Long userId, String name, String accessToken, String refreshToken, String tokenType) {}
 }

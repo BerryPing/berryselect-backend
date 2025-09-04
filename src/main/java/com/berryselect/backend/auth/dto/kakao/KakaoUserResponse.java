@@ -16,9 +16,18 @@ public class KakaoUserResponse {
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class KakaoAccount {
+
         private String email;
+
         @JsonProperty("phone_number")
         private String phoneNumber;
+
+        @JsonProperty("birthyear")
+        private String birthyear;
+
+        @JsonProperty("birthday")
+        private String birthday;
+
         private Profile profile;
 
         @Data
