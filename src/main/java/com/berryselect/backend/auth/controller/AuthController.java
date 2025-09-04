@@ -10,6 +10,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,14 +23,24 @@ public class AuthController {
     // 1. 로그인 시작 : 카카오 동의창으로 리다이렉트
     @GetMapping ("/kakao/authorize")
     public void kakaoAuthorize(HttpServletResponse res) throws IOException {
+        String scope = String.join(" ", List.of(
+                "profile_nickname",
+                "account_email",
+                "phone_number",
+                "birthyear",
+                "birthday"
+        ));
+
         String url = UriComponentsBuilder
                 .fromUriString("https://kauth.kakao.com/oauth/authorize")
                 .queryParam("response_type", "code")
                 .queryParam("client_id", kakaoProps.getRestKey())
                 .queryParam("redirect_uri", kakaoProps.getRedirectUri())
-                .queryParam("scope", "profile_nickname account_email phone_number birthyear birthday")
-                .build(true)
+                .queryParam("scope", scope)
+                .build()
+                .encode()
                 .toUriString();
+
         res.sendRedirect(url);
     }
 
