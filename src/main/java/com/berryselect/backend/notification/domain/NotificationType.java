@@ -7,7 +7,7 @@ public enum NotificationType {
     BUDGET_ALERT("예산 초과 알림", "BUDGET_ALERT"),
 
     // 기프티콘 만료 알림
-    GIFTICON_EXPIRE("기프티콘 만료 알림", "GIFICON_EXPIRE"),
+    GIFTICON_EXPIRE("기프티콘 만료 알림", "GIFTICON_EXPIRE"),
 
     // 혜택/이벤트 알림
     BENEFIT_EVENT("혜택/이벤트 알림", "BENEFIT_EVENT");

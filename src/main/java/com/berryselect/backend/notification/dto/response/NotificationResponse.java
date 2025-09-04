@@ -16,7 +16,7 @@ public class NotificationResponse {
     private String body;
     private LocalDateTime sentAt;
     private String status;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     private Boolean isRead;
 
     // Notification Entity (내부 로직용) -> DTO(클라이언트용) 변환
@@ -28,17 +28,8 @@ public class NotificationResponse {
                 .body(notification.getBody())
                 .sentAt(notification.getSentAt())
                 .status(notification.getStatus().getDisplayName())
-                .createAt(notification.getCreatedAt())
+                .createdAt(notification.getCreatedAt())
                 .isRead(notification.getIsRead())
                 .build();
-    }
-    // 알림 타입 한글명 반환
-    public String getNotificationTypeDisplayName() {
-        return this.notificationType;
-    }
-
-    // 발송 상태 한글명 반환
-    public String getStatusDisplayName() {
-        return this.status;
     }
 }

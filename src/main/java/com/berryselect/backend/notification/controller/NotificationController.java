@@ -26,7 +26,7 @@ public class NotificationController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getMyNotifications(
             @AuthenticationPrincipal Long userId,
-            @PageableDefault(size = 20, sort = "createAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<Notification> notificatons = notificationService.getUserNotifications(userId, pageable);
         Page<NotificationResponse> responses = notificatons.map(NotificationResponse::from);
@@ -63,7 +63,7 @@ public class NotificationController {
         Notification notification = notificationService.sendTestNotification(targetUserId);
         NotificationResponse response = NotificationResponse.from(notification);
 
-        log.info("테스트 알림 발송 요청 - targetUserId: {}, notificationId: {}", targetUserId, adminUserId);
+        log.info("테스트 알림 발송 요청 - targetUserId: {}, adminUserId: {}", targetUserId, adminUserId);
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }

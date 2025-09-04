@@ -23,7 +23,7 @@ import java.util.List;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
-    private final KaKaoNotificationAdapter kaKaoNotificationAdapter;
+    private final KakaoNotificationAdapter kakaoNotificationAdapter;
 
     // 사용자별 알림 목록 조회
     public Page<Notification> getUserNotifications(Long userId, Pageable pageable) {
@@ -118,7 +118,7 @@ public class NotificationService {
             }
 
             // 카카오 알림 발송
-            String resultCode = kaKaoNotificationAdapter.sendNotification(notification);
+            String resultCode = kakaoNotificationAdapter.sendNotification(notification);
 
             // 발송 성공 처리
             notification.setKakaoResult(resultCode);

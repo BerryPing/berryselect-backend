@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.awt.print.Pageable;
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,7 +20,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     Page<Notification> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 
     // 사용자별 읽지 않은 알림 개수 조회
-    @Query("SELECT COUNT(n) Notification n WHERE n.user.id = :userId AND n.isRead = false")
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.id = :userId AND n.isRead = false")
     Long countUnreadByUserId(@Param("userId") Long userId);
 
     // 사용자별 읽지 않은 알림 목록 조회
