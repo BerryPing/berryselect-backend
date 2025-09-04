@@ -38,6 +38,15 @@ public class WalletController {
         return ResponseEntity.ok(walletService.getCardDetail(userId, cardId));
     }
 
+    @GetMapping("/cards/{cardId}/benefits")
+    public ResponseEntity<CardBenefitsResponse> getCardBenefits(
+            @RequestHeader(name = "X-User-Id", required = false) Long userIdHeader,
+            @PathVariable Long cardId
+    ) {
+        Long userId = (userIdHeader != null) ? userIdHeader : 1L;  // Security 연동 전
+        return ResponseEntity.ok(walletService.getCardBenefits(userId, cardId));
+    }
+
     /**
      * =====================
      * Membership

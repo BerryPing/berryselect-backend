@@ -1,5 +1,6 @@
 package com.berryselect.backend.wallet.service;
 
+import com.berryselect.backend.wallet.adapter.client.SettingsApiClient;
 import com.berryselect.backend.wallet.domain.GifticonRedemption;
 import com.berryselect.backend.wallet.domain.UserAsset;
 import com.berryselect.backend.wallet.domain.type.AssetType;
@@ -31,6 +32,7 @@ public class WalletService {
     private final UserAssetRepository userAssetRepository;
     private final ProductRepository productRepository;
     private final GifticonRedemptionRepository gifticonRedemptionRepository;
+    private final SettingsApiClient settingsApiClient;
 
     /**
      * =====================
@@ -53,6 +55,18 @@ public class WalletService {
                 .findByIdAndUserIdAndAssetType(cardId, userId, AssetType.CARD)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found"));
         return WalletMapper.toCardDetail(ua);
+    }
+
+    @Transactional(readOnly = true)
+    public CardBenefitsResponse getCardBenefits(Long userId, Long cardId) {
+        UserAsset card = userAssetRepository
+                .findByIdAndUserIdAndAssetType(cardId, userId, AssetType.CARD)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found"));
+        UserSettingsResponse settings = settingsApiClient.getUserSettings(userId).block();
+
+        var personalized = WalletMapper.filterBenefits(card, settings.getPreferredCategories());
+        var others = WalletMapper.filterOtherBenefits(card, settings.getPreferredCategories());
+        return new CardBenefitsResponse(personalized, others);
     }
 
     /**
@@ -83,12 +97,12 @@ public class WalletService {
         UserAsset ua = new UserAsset();
         ua.setUserId(userId);
         ua.setProduct(
-                productRepository.findById(req.productId())
+                productRepository.findById(req.getProductId())
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid product"))
         );
         ua.setAssetType(AssetType.MEMBERSHIP);
-        ua.setExternalNo(req.externalNo());
-        ua.setLevel(req.level());
+        ua.setExternalNo(req.getExternalNo());
+        ua.setLevel(req.getLevel());
 
         UserAsset saved = userAssetRepository.save(ua);
         return WalletMapper.toMembershipDetail(saved);
