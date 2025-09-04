@@ -11,4 +11,5 @@ import org.springframework.context.annotation.Configuration;
 public class KakaoOauthProperties {
     private String restKey;
     private String redirectUri;
+    private String scope;
 }
