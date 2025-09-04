@@ -4,12 +4,12 @@ import com.berryselect.backend.common.dto.ApiResponse;
 import com.berryselect.backend.merchant.dto.request.MerchantSearchRequest;
 import com.berryselect.backend.merchant.dto.response.MerchantSearchResponse;
 import com.berryselect.backend.merchant.service.MerchantService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 
@@ -17,43 +17,27 @@ import java.math.BigDecimal;
 @RequestMapping("/merchants")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "가맹점 검색", description = "무한 스크롤 방식 가맹점 검색 API")
 public class MerchantController {
 
     private final MerchantService merchantService;
 
     @GetMapping("/search")
-    @Operation(
-            summary = "가맹점 검색 (무한 스크롤)",
-            description = "현재 위치 기반 무한 스크롤 방식으로 가맹점을 검색합니다"
-    )
     public ApiResponse<MerchantSearchResponse> searchMerchants(
-            @Parameter(description = "사용자 현재 위도", example = "37.5665")
             @RequestParam(required = false) BigDecimal userLat,
 
-            @Parameter(description = "사용자 현재 경도", example = "126.9780")
             @RequestParam(required = false) BigDecimal userLng,
 
-            @Parameter(description = "검색 키워드 (가맹점명, 브랜드명)", example = "스타벅스")
             @RequestParam(required = false) String keyword,
 
-            @Parameter(description = "카테고리 ID", example = "1")
             @RequestParam(required = false) Long categoryId,
 
-            @Parameter(description = "마지막으로 받은 가맹점 ID (첫 요청시 생략)", example = "100")
             @RequestParam(required = false) Long lastId,
 
-            @Parameter(description = "한 번에 가져올 개수", example = "20")
             @RequestParam(defaultValue = "20") Integer limit,
 
-            @Parameter(description = "최대 거리 (km)", example = "2.0")
             @RequestParam(required = false) Double maxDistanceKm,
 
-            @Parameter(description = "정렬 기준 (name, distance, id)", example = "distance")
             @RequestParam(defaultValue = "name") String sortBy) {
-
-        log.info("가맹점 검색 요청: keyword={}, categoryId={}, lastId={}, limit={}",
-                keyword, categoryId, lastId, limit);
 
         MerchantSearchRequest request = new MerchantSearchRequest();
         request.setKeyword(keyword);
