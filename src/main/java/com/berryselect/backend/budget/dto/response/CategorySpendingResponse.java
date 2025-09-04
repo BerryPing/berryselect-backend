@@ -20,5 +20,4 @@ public class CategorySpendingResponse {
     private Integer transactionCount; // 해당 카테고리 거래 건수
     private Double spendingRatio; // 전체 지출 대비 비율 (%)
     private Double categorySavingRate; // 카테고리별 절약률 (%)
-    private String chartColor; // 차트 표시용 색상 -> 프론트에서 사용
 }

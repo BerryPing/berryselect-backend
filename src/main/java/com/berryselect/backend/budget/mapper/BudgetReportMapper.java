@@ -57,7 +57,6 @@ public class BudgetReportMapper {
      * @param transactionCount 거래건수
      * @param spendingRatio 지출 비율 (Service에서 계산)
      * @param savingRate 절약률 (Service에서 계산)
-     * @param chartColor 차트 색상 (Service에서 할당)
      * @return 카테고리별 지출 응답 DTO
      */
     public CategorySpendingResponse toCategorySpendingResponse(
@@ -66,8 +65,7 @@ public class BudgetReportMapper {
             Long amountSpent,
             Integer transactionCount,
             Double spendingRatio,
-            Double savingRate,
-            String chartColor) {
+            Double savingRate) {
 
         return CategorySpendingResponse.builder()
                 .categoryId(categoryId)
@@ -76,7 +74,6 @@ public class BudgetReportMapper {
                 .transactionCount(transactionCount != null ? transactionCount : 0)
                 .spendingRatio(spendingRatio != null ? spendingRatio : 0.0)
                 .categorySavingRate(savingRate != null ? savingRate : 0.0)
-                .chartColor(chartColor != null ? chartColor : "#6366F1")
                 .build();
     }
 
