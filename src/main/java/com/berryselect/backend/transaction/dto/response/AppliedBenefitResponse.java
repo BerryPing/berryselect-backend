@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AppliedBenefitResponse {
     private Long id; // 혜택 ID
-    private SourceType sourceType; // 혜택 소스 타입 (card, membership, gifticon)
+    private String sourceType; // 혜택 소스 타입 (card, membership, gifticon)
     private String sourceName; // 혜택 소스명 (카드명, 멤버십명)
     private Integer savedAmount; // 할인받은 금액
     private String benefitDescription; // 혜택 설명 (ex: 5% 할인)

@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class MonthlyReportDetailResponse {
-    private String yearMont; // 조회 년월
+    private String yearMonth; // 조회 년월
     private Long totalSpent; // 총 지출 금액
     private Long totalSaved; // 총 절약 금액
     private Integer totalTransactionCount; // 총 거래 건수
