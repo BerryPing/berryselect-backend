@@ -17,8 +17,6 @@ public class KakaoUserResponse {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class KakaoAccount {
 
-        private String email;
-
         @JsonProperty("phone_number")
         private String phoneNumber;
 
