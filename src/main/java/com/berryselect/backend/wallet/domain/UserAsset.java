@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.time.LocalDate;
 
 @Entity
@@ -28,11 +29,14 @@ public class UserAsset {
     private AssetType assetType;  // CARD/MEMBERSHIP/GIFTICON
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "gifticon_status")
+    @Column(name = "status")
     private GifticonStatus gifticonStatus;  // ACTIVE/USED/EXPIRED
 
     @Column(length = 4)
     private String last4;
+
+    @Column(name = "prev_month_spend")
+    private Long prevMonthSpend;
 
     @Column(name = "this_month_spend")
     private Long thisMonthSpend;
@@ -48,6 +52,28 @@ public class UserAsset {
     @Column(name = "limit_expected")
     private Integer limitExpected;
 
+    @Column(name = "membership_point_balance")
+    private Long membershipPointBalance;
+
+    @Column(name = "expires_at")
     private LocalDate expiresAt;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    @PrePersist
+    void prePersist() {
+        Instant now = Instant.now();
+        createdAt = now;
+        updatedAt = now;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 }
 

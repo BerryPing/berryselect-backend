@@ -86,10 +86,15 @@ public class WalletController {
      */
     @GetMapping("/gifticons")
     public ResponseEntity<GifticonSummaryResponse> listGifticons(
-            @RequestHeader(name = "X-User-Id", required = false) Long userIdHeader
+            @RequestHeader(name = "X-User-Id", required = false) Long userIdHeader,
+            @RequestParam(name = "status", required = false) GifticonStatus status,
+            @RequestParam(name = "soonDays", required = false) Integer soonDays,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "50") int size,
+            @RequestParam(name = "sort", defaultValue = "expiresAt,asc") String sort
     ) {
         Long userId = (userIdHeader != null) ? userIdHeader : 1L;
-        return ResponseEntity.ok(walletService.getGifticonList(userId));
+        return ResponseEntity.ok(walletService.getGifticonList(userId, status, soonDays, page, size, sort));
     }
 
     @GetMapping("/gifticons/{gifticonId}")
@@ -155,6 +160,9 @@ public class WalletController {
             @PathVariable Long gifticonId,
             @RequestParam Integer usedAmount
     ) {
+        if (usedAmount == null || usedAmount <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
         Long userId = (userIdHeader != null) ? userIdHeader : 1L;
         walletService.redeemGifticon(userId, gifticonId, usedAmount);
         return ResponseEntity.noContent().build();
