@@ -54,6 +54,11 @@ dependencies {
 
 	// BCryptPasswordEncoder
 	implementation 'org.springframework.security:spring-security-crypto'
+
+	// 기프티콘 OCR/Barcode
+	implementation 'net.sourceforge.tess4j:tess4j:5.11.0'
+	implementation 'com.google.zxing:core:3.5.3'
+	implementation 'com.google.zxing:javase:3.5.3'
 }
 
 tasks.named('test') {

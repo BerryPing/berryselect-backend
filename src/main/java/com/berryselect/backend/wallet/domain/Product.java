@@ -26,7 +26,11 @@ public class Product {
     private String name;
 
     @Column(length = 255)
-    private String brand;
+    private String brand;  // OCR/사용자 입력 입력 원본
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    private Brand brandRef;  // FK brand(id)
 
     @Column(name = "face_value")
     private Integer faceValue;

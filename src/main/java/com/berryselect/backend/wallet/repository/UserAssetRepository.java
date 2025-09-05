@@ -17,19 +17,25 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserAssetRepository extends JpaRepository<UserAsset, Long> {
+    // Product + 표준 브랜드 FK(brand_id) 조회
+    @EntityGraph(attributePaths = {"product", "product.brandRef"})
     List<UserAsset> findByUserId(Long userId);
 
-    @EntityGraph(attributePaths = "product")
+    // 타입별(CARD/MEMBERSHIP/GIFTICON) 조회
+    @EntityGraph(attributePaths = {"product", "product.brandRef"})
     List<UserAsset> findByUserIdAndAssetTypeOrderByIdDesc(Long userId, AssetType assetType);
 
-    @EntityGraph(attributePaths = "product")
+    // 단건 상세 조회
+    @EntityGraph(attributePaths = {"product", "product.brandRef"})
     Optional<UserAsset> findByIdAndUserIdAndAssetType(Long id, Long userId, AssetType assetType);
 
+    // 기프티콘 사용 처리
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @EntityGraph(attributePaths = "product")
+    @EntityGraph(attributePaths = {"product", "product.brandRef"})
     Optional<UserAsset> findWithLockByIdAndUserIdAndAssetType(Long id, Long userId, AssetType assetType);
 
-    @EntityGraph(attributePaths = "product")
+    // 기프티콘 목록 검색(상세 필터, 만료기간 필터)
+    @EntityGraph(attributePaths = {"product", "product.brandRef"})
     @Query("""
         select ua
           from UserAsset ua
