@@ -17,6 +17,7 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
         SELECT m
         FROM Merchant m
         LEFT JOIN FETCH m.category c
+        LEFT JOIN FETCH m.brand b
         WHERE (:keyword IS NULL 
                OR LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
                OR LOWER(m.brand) LIKE LOWER(CONCAT('%', :keyword, '%')))

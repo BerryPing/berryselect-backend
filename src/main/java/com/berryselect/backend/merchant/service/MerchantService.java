@@ -55,7 +55,7 @@ public class MerchantService {
             return MerchantSearchResponse.MerchantInfo.builder()
                     .id(m.getId())
                     .name(m.getName())
-                    .brand(m.getBrand())
+                    .brand(m.getBrand() != null ? m.getBrand().getName() : null)
                     .categoryId(m.getCategory() != null ? m.getCategory().getId() : null)
                     .categoryName(m.getCategory() != null ? m.getCategory().getName() : null)
                     .address(m.getAddress())

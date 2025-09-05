@@ -1,5 +1,6 @@
 package com.berryselect.backend.merchant.domain;
 
+import com.berryselect.backend.wallet.domain.Brand;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,7 +19,9 @@ public class MerchantCache {
 
     private String name;
 
-    private String brand;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
 
     @Column(precision = 9, scale = 6)
     private BigDecimal lat;
