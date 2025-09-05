@@ -4,7 +4,6 @@ import com.berryselect.backend.budget.domain.MonthlyCategorySummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -16,7 +15,7 @@ public interface MonthlyCategorySummaryRepository extends JpaRepository<MonthlyC
      * - 프론트: 카테고리별 지출 건수 차트/목록 표시
      * - amountSpent(지출액), txCount(거래건수) 포함
      */
-    List<MonthlyCategorySummary> findByUserIdAndYearMonthOrderByAmountDesc(Long userId, String yearMonth);
+    List<MonthlyCategorySummary> findByUserIdAndYearMonthOrderByAmountSpentDesc(Long userId, String yearMonth);
 
     /**
      * 사용자 월별 전체 요약 통계 (총 지출, 총 절약, 총 거래건수)
