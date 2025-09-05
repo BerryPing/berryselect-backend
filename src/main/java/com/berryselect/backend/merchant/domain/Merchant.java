@@ -1,7 +1,11 @@
 package com.berryselect.backend.merchant.domain;
 
+import com.berryselect.backend.wallet.domain.Brand;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,8 +25,9 @@ public class Merchant {
     @Column(nullable = false, length = 120)
     private String name;
 
-    @Column(length = 80)
-    private String brand;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
 
     // Category 엔티티와의 관계 (Lazy Loading)
     @ManyToOne(fetch = FetchType.LAZY)
