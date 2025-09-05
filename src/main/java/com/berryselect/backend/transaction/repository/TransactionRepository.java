@@ -23,7 +23,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                 AND (:categoryId IS NULL OR t.categoryId = :categoryId)
                 ORDER BY t.txTime DESC
         """)
-    Page<Transaction> findUserTransactionWithFilters(
+    Page<Transaction> findUserTransactionsWithFilters(
             @Param("userId") Long userId,
             @Param("yearMonth") String yearMonth,
             @Param("categoryId") Long categoryId,

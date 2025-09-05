@@ -14,7 +14,7 @@ public interface AppliedBenefitRepository extends JpaRepository<AppliedBenefit, 
      * 거래 ID 목록에 대한 할인 혜택 조회
      * - 프론트: 최근 거래 목록에서 각 거래별 할인받은 금액 표시
      */
-    List<AppliedBenefit> findByTxIdIn(List<String> txIds);
+    List<AppliedBenefit> findByTxIdIn(List<Long> txIds);
 
     /**
      * 사용자 월별 총 절감금액 계산

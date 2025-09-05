@@ -1,17 +1,16 @@
 package com.berryselect.backend.transaction.service;
 
-import com.berryselect.backend.merchant.domain.Brand;
-import com.berryselect.backend.merchant.repository.BrandRepository;
+import com.berryselect.backend.merchant.domain.Category;
 import com.berryselect.backend.merchant.repository.CategoryRepository;
 import com.berryselect.backend.merchant.repository.MerchantRepository;
 import com.berryselect.backend.transaction.domain.AppliedBenefit;
 import com.berryselect.backend.transaction.domain.Transaction;
+import com.berryselect.backend.transaction.domain.SourceType;
 import com.berryselect.backend.transaction.dto.response.AppliedBenefitResponse;
 import com.berryselect.backend.transaction.dto.response.TransactionDetailResponse;
 import com.berryselect.backend.transaction.mapper.TransactionMapper;
 import com.berryselect.backend.transaction.repository.AppliedBenefitRepository;
 import com.berryselect.backend.transaction.repository.TransactionRepository;
-import com.berryselect.backend.wallet.repository.ProductRepository;
 import com.berryselect.backend.wallet.repository.UserAssetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,20 +35,11 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final AppliedBenefitRepository appliedBenefitRepository;
     private final CategoryRepository categoryRepository;
-    private final BrandRepository brandRepository;
     private final MerchantRepository merchantRepository;
     private final UserAssetRepository userAssetRepository;
-    private final ProductRepository productRepository;
 
     /**
      * 사용자 거래 내역 조회
-     * - 프론트: 거래 목록 카드 표시용
-     *
-     * @param userId 사용자 ID
-     * @param yearMonth 조회 년월 (YYYY-MM, null이면 전체)
-     * @param categoryId 카테고리 ID (null이면 전체)
-     * @param pageable 페이징 정보
-     * @return 거래 상세 응답 목록 (페이징)
      */
     public Page<TransactionDetailResponse> getUserTransactions(
             Long userId, String yearMonth, Long categoryId, Pageable pageable) {
@@ -57,48 +47,38 @@ public class TransactionService {
         log.info("사용자 거래 내역 조회 - userId: {}, yearMonth: {}, categoryId: {}",
                 userId, yearMonth, categoryId);
 
-        // 거래 내역 조회
         Page<Transaction> transactions = transactionRepository
-                .findUserTransactionWithFilters(userId, yearMonth, categoryId, pageable);
+                .findUserTransactionsWithFilters(userId, yearMonth, categoryId, pageable);
 
-        // 거래 ID 목록 추출
         List<Long> txIds = transactions.getContent().stream()
                 .map(Transaction::getTxId)
                 .collect(Collectors.toList());
 
-        // 거래별 적용된 혜택 조회
         Map<Long, List<AppliedBenefit>> benefitsMap = getBenefitsMapByTxIds(txIds);
 
-        // 거래별 상세 정보 변환
         return transactions.map(transaction -> {
             List<AppliedBenefit> benefits = benefitsMap.getOrDefault(transaction.getTxId(), List.of());
 
-            // 가맹점명, 카테고리명, 카드명 조회
             String merchantName = getMerchantName(transaction.getMerchantId());
             String categoryName = getCategoryName(transaction.getCategoryId());
-            String paymentCardName = getPaymentName(transaction.getPaymentAssetId());
+            String paymentCardName = getPaymentCardName(transaction.getPaymentAssetId());
 
-            // 혜택 응답 목록 생성
             List<AppliedBenefitResponse> benefitResponses = benefits.stream()
                     .map(this::convertToBenefitResponse)
                     .collect(Collectors.toList());
 
-            // 총 할인금액 계산
             Integer totalSavedAmount = benefits.stream()
                     .mapToInt(AppliedBenefit::getSavedAmount)
                     .sum();
 
             return transactionMapper.toDetailResponse(
-                    transaction, merchantName, categoryName, paymentCardName, benefitResponses, totalSavedAmount);
+                    transaction, merchantName, categoryName, paymentCardName,
+                    benefitResponses, totalSavedAmount);
         });
     }
 
     /**
      * 월별 추천 사용률 계산
-     *
-     * @param userId 사용자 ID
-     * @param yearMonth 조회 년월 (YYYY-MM)
-     * @return 추천 사용률 (0.0 ~ 1.0)
      */
     public Double getRecommendationUsageRate(Long userId, String yearMonth) {
         log.info("추천 사용률 계산 - userId: {}, yearMonth: {}", userId, yearMonth);
@@ -116,10 +96,6 @@ public class TransactionService {
 
     /**
      * 월별 총 절약금액 조회
-     *
-     * @param userId 사용자 ID
-     * @param yearMonth 조회 년월 (YYYY-MM)
-     * @return 총 절약금액
      */
     public Long getTotalSavedAmount(Long userId, String yearMonth) {
         log.info("월별 총 절약금액 조회 - userId: {}, yearMonth: {}", userId, yearMonth);
@@ -127,10 +103,8 @@ public class TransactionService {
         return appliedBenefitRepository.getTotalSavedByUserAndMonth(userId, yearMonth);
     }
 
-    // ==== 내부 헬퍼 메서드 ====
-    /**
-     * 거래 ID 목록에 대한 혜택 맵 생성
-     */
+    // ===== 내부 헬퍼 메서드 =====
+
     private Map<Long, List<AppliedBenefit>> getBenefitsMapByTxIds(List<Long> txIds) {
         if (txIds.isEmpty()) {
             return Map.of();
@@ -142,9 +116,6 @@ public class TransactionService {
                 .collect(Collectors.groupingBy(AppliedBenefit::getTxId));
     }
 
-    /**
-     * AppliedBenefit를 AppliedBenefitResponse로 변환
-     */
     private AppliedBenefitResponse convertToBenefitResponse(AppliedBenefit benefit) {
         String sourceName = getSourceName(benefit.getSourceRef(), benefit.getSourceType());
         String benefitDescription = generateBenefitDescription(benefit);
@@ -161,18 +132,13 @@ public class TransactionService {
         }
 
         return merchantRepository.findById(merchantId)
-             .map(merchant -> {
-                 if (merchant.getBrandId() != null) {
-                     String brandName = brandRepository.findById(merchant.getBrandId())
-                         .map(Brand::getName)
-                         .orElse("");
-                     return brandName.isEmpty() ? merchant.getName() : brandName + " " + merchant.getName();
-                 }
-                 return merchant.getName();
-             })
-             .orElse("알 수 없는 가맹점");
-
-        return "가맹점 #" + merchantId;
+                .map(merchant -> {
+                    if (merchant.getBrand() != null) {
+                        return merchant.getBrand().getName() + " " + merchant.getName();
+                    }
+                    return merchant.getName();
+                })
+                .orElse("알 수 없는 가맹점");
     }
 
     /**
@@ -197,12 +163,14 @@ public class TransactionService {
         }
 
         return userAssetRepository.findById(paymentAssetId)
-             .map(asset -> productRepository.findById(asset.getProductId())
-                 .map(Product::getName)
-                 .orElse("알 수 없는 카드"))
-                 .orElse("현금");
-
-        return "카드 #" + paymentAssetId;
+                .map(asset -> {
+                    // 팀원이 @EntityGraph로 product를 함께 조회하도록 설정
+                    if (asset.getProduct() != null) {
+                        return asset.getProduct().getName();
+                    }
+                    return "알 수 없는 카드";
+                })
+                .orElse("현금");
     }
 
     /**
@@ -213,18 +181,16 @@ public class TransactionService {
             return sourceType.getKoreanName();
         }
 
-        // TODO: sourceType에 따른 실제 이름 조회 구현 필요
-        // switch (sourceType) {
-        //     case CARD, MEMBERSHIP -> userAssetRepository.findById(sourceRef)...
-        //     case GIFTICON -> userAssetRepository.findById(sourceRef)...
-        // }
-
-        return sourceType.getKoreanName() + " #" + sourceRef;
+        return userAssetRepository.findById(sourceRef)
+                .map(asset -> {
+                    if (asset.getProduct() != null) {
+                        return asset.getProduct().getName();
+                    }
+                    return sourceType.getKoreanName();
+                })
+                .orElse(sourceType.getKoreanName());
     }
 
-    /**
-     * 혜택 설명 생성
-     */
     private String generateBenefitDescription(AppliedBenefit benefit) {
         return String.format("%,d원 절약", benefit.getSavedAmount());
     }

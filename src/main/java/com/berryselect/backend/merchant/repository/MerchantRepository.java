@@ -32,11 +32,4 @@ public interface MerchantRepository extends JpaRepository<Merchant, Long> {
             @Param("lastId") Long lastId,
             Pageable pageable
     );
-
-    @Query("""
-        SELECT m FROM Merchant m 
-        LEFT JOIN FETCH Brand b ON m.brandId = b.id 
-        WHERE m.id = :merchantId
-        """)
-    Optional<Merchant> findByIdWithBrand(@Param("merchantId") Long merchantId);
 }
