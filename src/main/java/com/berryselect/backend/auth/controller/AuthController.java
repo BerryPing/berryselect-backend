@@ -44,13 +44,6 @@ public class AuthController {
         res.sendRedirect(url);
     }
 
-//    // 2. 콜백 : code 수신 -> 토큰 교환 -> 우리 JWT 발급
-//    @GetMapping("/kakao/callback")
-//    public ResponseEntity<?> kakaoCallback(@RequestParam("code") String code){
-//        var r = authService.loginWithAuthorizationCode(code);
-//        return ResponseEntity.ok(r);
-//    }
-
     // 2. 콜백 : code 수신 -> 토큰 교환 -> 우리 JWT 발급 -> 프론트로 리다이렉트
     @GetMapping("/kakao/callback")
     public void kakaoCallback(@RequestParam("code") String code, HttpServletResponse response) throws IOException {
@@ -61,7 +54,10 @@ public class AuthController {
 
         String redirectUrl = front
                 + "#accessToken=" + URLEncoder.encode(r.getAccessToken(), StandardCharsets.UTF_8)
-                + "&refreshToken=" + URLEncoder.encode(r.getRefreshToken(), StandardCharsets.UTF_8);
+                + (r.getRefreshToken() != null
+                ? "&refreshToken=" + URLEncoder.encode(r.getRefreshToken(), StandardCharsets.UTF_8)
+                : "")
+                + "&isNewUser=" + r.isNewUser();
 
         response.sendRedirect(redirectUrl); // 프론트로 이동
     }
@@ -78,9 +74,5 @@ public class AuthController {
     public static class RefreshRequest {
         private String refreshToken;
     }
-
-
-
-
 
 }

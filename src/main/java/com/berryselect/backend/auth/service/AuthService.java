@@ -14,9 +14,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.berryselect.backend.auth.dto.response.AuthResult;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -28,6 +31,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final OnboardingTokenStore onboardingTokenStore;
 
     @Value("${jwt.refresh-token-exp}")
     private long refreshTokenExpMs;
@@ -42,54 +46,40 @@ public class AuthService {
         KakaoUserResponse me = kakaoClient.getUserMe(token.getAccessToken());
         Long kakaoId = me.getId();
 
-        // 3) DB upsert
-        User user = userRepository
-                .findByProviderAndProviderUserId(User.Provider.KAKAO, String.valueOf(kakaoId))
-                .orElseGet(() -> User.builder()
-                        .provider(User.Provider.KAKAO)
-                        .providerUserId(String.valueOf(kakaoId))
-                        .build());
+        var byProvider = userRepository.findByProviderAndProviderUserId(User.Provider.KAKAO, String.valueOf(kakaoId));
 
-        // 이름: nickname 우선
-        String nickname = (me.getKakaoAccount() != null
-                && me.getKakaoAccount().getProfile() != null)
-                ? me.getKakaoAccount().getProfile().getNickname()
-                : null;
+        boolean isNewUser = byProvider.isEmpty();
 
-        // 전화번호: 그대로 저장(+82 형식일 수 있음)
-        String phone = (me.getKakaoAccount() != null) ? me.getKakaoAccount().getPhoneNumber() : null;
+        // 새로운 user인 경우 db에 저장하지 않음
+        if(isNewUser){
 
-        // 생년월일: birthyear(YYYY) + birthday(MMDD) → LocalDate
-        LocalDate birth = null;
-        if (me.getKakaoAccount() != null) {
-            String by = safe(me.getKakaoAccount().getBirthyear()); // "1995"
-            String bd = safe(me.getKakaoAccount().getBirthday());  // "0101"
-            if (by.length() == 4 && bd.length() == 4) {
-                int year = Integer.parseInt(by);
-                int month = Integer.parseInt(bd.substring(0, 2));
-                int day = Integer.parseInt(bd.substring(2, 4));
-                birth = LocalDate.of(year, month, day);
-            }
+            onboardingTokenStore.put(String.valueOf(kakaoId), token.getAccessToken(), 10*60*1000L);
+
+            String guestJwt = jwtProvider.createTempAccessToken(
+                    "guest:" + kakaoId,
+                    List.of(new SimpleGrantedAuthority("ROLE_GUEST"))
+            );
+
+            return AuthResult.builder()
+                    .accessToken(guestJwt)
+                    .refreshToken(null)
+                    .isNewUser(true)
+                    .build();
         }
 
-        user.setName(nickname);
-        user.setPhone(phone);
-        user.setBirth(birth);
-        user.setAccessToken(token.getAccessToken());     // (권장) 암호화 저장
-        user.setRefreshToken(token.getRefreshToken());   // (권장) 암호화 저장
-        if (token.getExpiresIn() != null) {
-            user.setTokenExpiresAt(Instant.now().plusSeconds(token.getExpiresIn()));
-        }
+        // 기존 유저는 그대로 db업데이트 + 토큰 발급
+        User user = byProvider.get();
         userRepository.save(user);
 
-        // 4) 우리 서비스 JWT 발급
-        var authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
-        String accessJwt  = jwtProvider.createAccessToken(String.valueOf(user.getId()), authorities);
+        String accessJwt = jwtProvider.createAccessToken(String.valueOf(user.getId()), List.of(new SimpleGrantedAuthority("ROLE_USER")));
         String refreshJwt = jwtProvider.createRefreshToken(String.valueOf(user.getId()));
-
         storeRefreshToken(user, refreshJwt);
 
-        return new AuthResult(user.getId(), user.getName(), accessJwt, refreshJwt, "Bearer");
+        return AuthResult.builder()
+                .accessToken(accessJwt)
+                .refreshToken(refreshJwt)
+                .isNewUser(false)
+                .build();
     }
 
     private void storeRefreshToken(User user, String refreshJwt) {
@@ -146,16 +136,6 @@ public class AuthService {
 
     private static String safe(String v) { return v == null ? "" : v; }
 
-    // DTO
-    @Getter
-    @AllArgsConstructor
-    public static class AuthResult {
-        private Long userId;
-        private String name;
-        private String accessToken;
-        private String refreshToken;
-        private String tokenType;
-    }
 
     @Getter
     @NoArgsConstructor

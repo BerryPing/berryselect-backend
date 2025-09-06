@@ -67,6 +67,27 @@ public class JwtProvider {
                 .compact();
     }
 
+    public String createTempAccessToken(String subject, Collection<? extends GrantedAuthority> authorities) {
+
+        long tempExpMs = 5 * 60 * 1000L;
+
+        List<String> roles = (authorities == null)
+                ? List.of("ROLE_GUEST")
+                : authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + tempExpMs);
+
+        return Jwts.builder()
+                .setSubject(subject)
+                .claim("roles", roles)
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .setIssuer(issuer)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public String createRefreshToken(String subject){
         Date now = new Date();
         Date exp = new Date(now.getTime() + refreshTokenExpMs);
