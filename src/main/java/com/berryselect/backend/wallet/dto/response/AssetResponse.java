@@ -1,10 +1,17 @@
 package com.berryselect.backend.wallet.dto.response;
 
-public record AssetResponse (
-    Long id,
-    String type,  // "CARD"
-    String productName,  // 카드 상품명
-    String issuer,  // 카드사
-    String last4,
-    Long thisMonthSpend
-) { }
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class AssetResponse {
+    private Long id;
+    private String type;        // "CARD"
+    private String productName; // 카드 상품명
+    private String issuer;      // 카드사
+    private String last4;
+    private Long thisMonthSpend;
+}

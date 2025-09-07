@@ -28,7 +28,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/auth")
+                || path.startsWith("/actuator/health")
+                || path.startsWith("/merchants");  // 👈 가맹점 검색 API 전체 제외
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
+
         String auth = req.getHeader("Authorization");
 
         if(auth != null && auth.startsWith("Bearer ")) {
