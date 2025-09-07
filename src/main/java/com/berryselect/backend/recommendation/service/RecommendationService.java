@@ -67,9 +67,11 @@ public class RecommendationService {
                             brandId
                     );
 
-            int expectedSave = saveMap.values().stream()
-                    .flatMap(List::stream)
-                    .mapToInt(BenefitCalculationService.RuleSaving::appliedValue)
+            int expectedSave = combo.stream()
+                    .mapToInt(ua -> saveMap.getOrDefault(ua, List.of()).stream()
+                            .max(Comparator.comparingInt(BenefitCalculationService.RuleSaving::appliedValue))
+                            .map(BenefitCalculationService.RuleSaving::appliedValue)
+                            .orElse(0))
                     .sum();
             int expectedPay = req.getAmount() - expectedSave;
 
@@ -83,31 +85,28 @@ public class RecommendationService {
 
             short order = 1;
             for (UserAsset ua : combo) {
-                int assetTotalSave = saveMap.getOrDefault(ua, List.of()).stream()
-                        .mapToInt(BenefitCalculationService.RuleSaving::appliedValue)
-                        .sum();
+                List<BenefitCalculationService.RuleSaving> ruleSaves = saveMap.getOrDefault(ua, List.of());
 
-                String subtitle = saveMap.getOrDefault(ua, List.of()).stream()
-                        .map(rs -> rs.description() + " (절감 " + rs.appliedValue() + "원)")
-                        .reduce((a, b) -> a + " + " + b)
+                // 가장 절감액이 큰 rule 선택
+                BenefitCalculationService.RuleSaving bestRule = ruleSaves.stream()
+                        .max(Comparator.comparingInt(BenefitCalculationService.RuleSaving::appliedValue))
                         .orElse(null);
 
-                for (BenefitCalculationService.RuleSaving rs : saveMap.getOrDefault(ua, List.of())) {
-                RecommendationOptionItem item = RecommendationOptionItem.builder()
-                        .option(option)
-                        .componentType(ua.getAssetType().name())
-                        .componentRefId(ua.getId())
-                        .ruleId(rs.ruleId())
-                        .title(ua.getProduct().getName())
-                        .appliedValue(assetTotalSave)
-                        .subtitle(subtitle)
-                        .sortOrder(order++)
-                        .build();
-                optionItemRepository.save(item);
-
-                // ✅ items 리스트에도 추가 (빈 리스트 방지)
-                option.getItems().add(item);
-            }}
+                if (bestRule != null) {
+                    RecommendationOptionItem item = RecommendationOptionItem.builder()
+                            .option(option)
+                            .componentType(ua.getAssetType().name())
+                            .componentRefId(ua.getId())
+                            .ruleId(bestRule.ruleId())
+                            .title(ua.getProduct().getName())
+                            .appliedValue(bestRule.appliedValue())
+                            .subtitle(bestRule.description() + " (절감 " + bestRule.appliedValue() + "원)")
+                            .sortOrder(order++)
+                            .build();
+                    optionItemRepository.save(item);
+                    option.getItems().add(item);
+                }
+            }
             options.add(option);
         }
 
@@ -123,8 +122,12 @@ public class RecommendationService {
     }
 
     private List<List<UserAsset>> generateCombos(List<UserAsset> assets) {
-        List<UserAsset> cards = assets.stream().filter(a -> a.getAssetType().name().equals("CARD")).toList();
-        List<UserAsset> memberships = assets.stream().filter(a -> a.getAssetType().name().equals("MEMBERSHIP")).toList();
+        List<UserAsset> cards = assets.stream()
+                .filter(a -> a.getAssetType().name().equals("CARD"))
+                .toList();
+        List<UserAsset> memberships = assets.stream()
+                .filter(a -> a.getAssetType().name().equals("MEMBERSHIP"))
+                .toList();
 
         List<List<UserAsset>> combos = new ArrayList<>();
         for (UserAsset card : cards) {
@@ -146,8 +149,6 @@ public class RecommendationService {
             throw new IllegalStateException("세션에 접근 권한이 없습니다.");
         }
 
-        // 옵션 & 아이템이 지연 로딩일 수 있으니 fetch join 권장
-        // 지금은 session.getOptions() 안에 items도 붙어서 반환됨
         return RecommendationResponse.fromEntity(session);
     }
 
