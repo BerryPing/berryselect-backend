@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "gifticon_redemptions")
@@ -24,6 +24,11 @@ public class GifticonRedemption {
     @Column(name = "used_amount", nullable = false)
     private Integer usedAmount;
 
-    @Column(name = "redeemeed_at", nullable = false)
-    private LocalDateTime redeemedAt;
+    @Column(name = "redeemed_at", nullable = false)
+    private Instant redeemedAt;
+
+    @PrePersist
+    void prePersist() {
+        if(redeemedAt == null) redeemedAt = Instant.now();
+    }
 }

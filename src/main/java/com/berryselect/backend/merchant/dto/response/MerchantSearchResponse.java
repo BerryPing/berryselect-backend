@@ -24,7 +24,8 @@ public class MerchantSearchResponse {
     public static class MerchantInfo {
         private Long id;
         private String name;
-        private String brand;
+        private Long brand_id;
+        private String brandName;
         private Long categoryId;
         private String categoryName;
         private String address;

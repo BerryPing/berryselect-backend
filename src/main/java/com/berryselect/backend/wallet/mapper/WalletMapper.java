@@ -3,6 +3,9 @@ package com.berryselect.backend.wallet.mapper;
 import com.berryselect.backend.wallet.domain.UserAsset;
 import com.berryselect.backend.wallet.dto.response.*;
 
+import java.util.Collections;
+import java.util.List;
+
 public final class WalletMapper {
     private WalletMapper() {}
 
@@ -30,6 +33,20 @@ public final class WalletMapper {
                 ua.getLast4(),
                 ua.getThisMonthSpend()
         );
+    }
+
+    public static List<CardBenefitsResponse.BenefitGroup> filterBenefits(
+            UserAsset card, List<String> preferredCategories
+    ) {
+        // benefits 연동 전
+        return Collections.emptyList();
+    }
+
+    public static List<CardBenefitsResponse.BenefitGroup> filterOtherBenefits(
+            UserAsset card, List<String> preferredCategories
+    ) {
+        // benefits 연동 전
+        return Collections.emptyList();
     }
 
     /**
