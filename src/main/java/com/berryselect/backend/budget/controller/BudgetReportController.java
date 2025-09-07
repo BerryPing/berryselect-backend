@@ -19,23 +19,7 @@ public class BudgetReportController {
 
     private final ReportService reportService;
 
-    /**
-     * 월별 상세 리포트 조회
-     *
-     * @param yearMonth 조회 년월 (YYYY-MM)
-     * @param userId 사용자 ID
-     * @return 월별 상세 리포트 (소비 차트, 절감액, 추천 사용률, AI 요약 포함)
-     *
-     * 포함 데이터:
-     * - 총 지출액, 총 절약액, 총 거래건수
-     * - 카테고리별 지출 내역 (금액, 건수, 비율, 절약률)
-     * - 추천 사용률 통계 (사용 건수, 비율, 절약 효과)
-     * - AI 분석 요약 (소비 패턴, 절약 제안)
-     * - 전체 절약률
-     *
-     * 예시:
-     * GET /myberry/reports/2024-12?userId=1
-     */
+    // 월별 상세 리포트 조회
     @GetMapping("/reports/{yearMonth}")
     public ResponseEntity<MonthlyReportDetailResponse> getMonthlyReport(
             @AuthenticationPrincipal String subject,
@@ -67,13 +51,7 @@ public class BudgetReportController {
         }
     }
 
-    /**
-     * AI 분석 리포트 재생성 (별도 API)
-     *
-     * @param yearMonth 조회 년월 (YYYY-MM)
-     * @param userId 사용자 ID
-     * @return 새로 생성된 AI 분석 내용
-     */
+    // AI 분석 리포트 재생성 (별도 API)
     @PostMapping("/reports/{yearMonth}/ai-regenerate")
     public ResponseEntity<String> regenerateAiSummary(
             @AuthenticationPrincipal String subject,
@@ -107,9 +85,7 @@ public class BudgetReportController {
         }
     }
 
-    /**
-     * 년월 형식 검증 (YYYY-MM)
-     */
+    // 년월 형식 검증 (YYYY-MM)
     private boolean isValidYearMonth(String yearMonth) {
         if (yearMonth == null || yearMonth.length() != 7) {
             return false;
