@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -29,8 +28,8 @@ public class MerchantSearchResponse {
         private Long categoryId;
         private String categoryName;
         private String address;
-        private BigDecimal lat;
-        private BigDecimal lng;
+        private Double lat;
+        private Double lng;
         private String kakaoPlaceId;
 
         // 거리 정보
