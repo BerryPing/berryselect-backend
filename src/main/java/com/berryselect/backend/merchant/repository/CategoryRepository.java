@@ -1,4 +1,4 @@
-package com.berryselect.backend.auth.repository;
+package com.berryselect.backend.merchant.repository;
 
 import com.berryselect.backend.merchant.domain.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
