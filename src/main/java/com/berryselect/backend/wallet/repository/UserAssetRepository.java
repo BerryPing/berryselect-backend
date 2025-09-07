@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserAssetRepository extends JpaRepository<UserAsset, Long> {
+
     // Product + 표준 브랜드 FK(brand_id) 조회
     @EntityGraph(attributePaths = {"product", "product.brandRef"})
     List<UserAsset> findByUserId(Long userId);

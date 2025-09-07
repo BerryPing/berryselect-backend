@@ -29,7 +29,7 @@ public class MerchantService {
         Long lastId = (req.getLastId() != null && req.getLastId() > 0) ? req.getLastId() : null;
         int limit = (req.getLimit() != null && req.getLimit() > 0) ? req.getLimit() : 20;
 
-        Pageable pageable = PageRequest.of(0, limit + 1);
+        Pageable pageable = PageRequest.of(0, limit+1);
 
         List<Merchant> rows = merchantRepository.findMerchants(keyword, categoryId, lastId, pageable);
 
@@ -109,10 +109,10 @@ public class MerchantService {
         double R = 6371_000.0;
         double dLat = Math.toRadians(lat2 - lat1);
         double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                        Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+                Math.cos(Math.toRadians(lat1))*Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLng/2)*Math.sin(dLng/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
         return R * c;
     }
 

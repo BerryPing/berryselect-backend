@@ -67,6 +67,27 @@ public class JwtProvider {
                 .compact();
     }
 
+    public String createTempAccessToken(String subject, Collection<? extends GrantedAuthority> authorities) {
+
+        long tempExpMs = 5 * 60 * 1000L;
+
+        List<String> roles = (authorities == null)
+                ? List.of("ROLE_GUEST")
+                : authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList());
+
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + tempExpMs);
+
+        return Jwts.builder()
+                .setSubject(subject)
+                .claim("roles", roles)
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .setIssuer(issuer)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public String createRefreshToken(String subject){
         Date now = new Date();
         Date exp = new Date(now.getTime() + refreshTokenExpMs);
@@ -75,7 +96,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .setSubject(subject) // sub: 사용자 식별자
                 .setId(jti) // jti: 토큰 고유 ID (회전/블랙리스트용)
-                .claim("token_type", "refresh")  // ← 구분 클레임(권장: token_type)
+                .claim("token_type", "refresh")  // 구분 클레임
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .setIssuer(issuer)
@@ -114,7 +135,6 @@ public class JwtProvider {
         return parseClaims(token).getSubject();
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> getRoles(String token){
         Object v = parseClaims(token).get("roles");
         if(v instanceof List<?> list){
