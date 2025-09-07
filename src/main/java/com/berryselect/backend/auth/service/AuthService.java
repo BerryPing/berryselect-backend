@@ -53,7 +53,12 @@ public class AuthService {
         // 새로운 user인 경우 db에 저장하지 않음
         if(isNewUser){
 
-            onboardingTokenStore.put(String.valueOf(kakaoId), token.getAccessToken(), 10*60*1000L);
+            onboardingTokenStore.put(
+                    String.valueOf(kakaoId),
+                    token.getAccessToken(),
+                    token.getRefreshToken(),
+                    token.getExpiresIn() * 1000L
+            );
 
             String guestJwt = jwtProvider.createTempAccessToken(
                     "guest:" + kakaoId,

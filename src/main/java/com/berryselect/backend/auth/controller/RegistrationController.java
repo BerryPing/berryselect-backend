@@ -6,6 +6,7 @@ import com.berryselect.backend.auth.dto.response.AuthResult;
 import com.berryselect.backend.auth.repository.*;
 import com.berryselect.backend.auth.service.KakaoOauthClient;
 import com.berryselect.backend.auth.service.OnboardingTokenStore;
+import com.berryselect.backend.merchant.repository.CategoryRepository;
 import com.berryselect.backend.security.util.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
@@ -78,12 +79,12 @@ public class RegistrationController {
         }
 
         // 4) 임시 보관소에서 카카오 access_token 회수
-        String kakaoAccessToken = onboardingTokenStore.consume(kakaoId);
-        if (kakaoAccessToken == null) return ResponseEntity.status(401).build();
+        var tokens = onboardingTokenStore.consume(kakaoId);
+        if (tokens == null) return ResponseEntity.status(401).build();
 
 
         // 5) 카카오에서 프로필 조회 (이름/전화/생일)
-        KakaoUserResponse me = kakaoClient.getUserMe(kakaoAccessToken);
+        KakaoUserResponse me = kakaoClient.getUserMe(tokens.accessToken);
         String name = (me.getKakaoAccount() != null && me.getKakaoAccount().getProfile() != null)
                 ? me.getKakaoAccount().getProfile().getNickname() : null;
         String phone = (me.getKakaoAccount() != null) ? me.getKakaoAccount().getPhoneNumber() : null;
@@ -103,6 +104,9 @@ public class RegistrationController {
                 .name(name)
                 .phone(phone)
                 .birth(birth)
+                .accessToken(tokens.accessToken)
+                .refreshToken(tokens.refreshToken)
+                .tokenExpiresAt(tokens.expiresAt)
                 .build();
         userRepository.save(user);
 
