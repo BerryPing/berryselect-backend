@@ -1,5 +1,6 @@
 package com.berryselect.backend.auth.domain;
 
+import com.berryselect.backend.merchant.domain.Category;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
