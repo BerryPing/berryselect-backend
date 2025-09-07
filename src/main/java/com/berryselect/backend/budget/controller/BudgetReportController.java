@@ -5,6 +5,7 @@ import com.berryselect.backend.budget.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -37,12 +38,15 @@ public class BudgetReportController {
      */
     @GetMapping("/reports/{yearMonth}")
     public ResponseEntity<MonthlyReportDetailResponse> getMonthlyReport(
-            @PathVariable("yearMonth") String yearMonth,
-            @RequestParam("userId") Long userId) {
-
-        log.info("월별 리포트 조회 요청 - userId: {}, yearMonth: {}", userId, yearMonth);
+            @AuthenticationPrincipal String subject,
+            @PathVariable("yearMonth") String yearMonth) {
 
         try {
+            // JWT subject에서 userId 추출
+            Long userId = Long.parseLong(subject);
+
+            log.info("월별 리포트 조회 요청 - userId: {}, yearMonth: {}", userId, yearMonth);
+
             // 년월 형식 검증
             if (!isValidYearMonth(yearMonth)) {
                 log.warn("잘못된 년월 형식 - yearMonth: {}", yearMonth);
@@ -57,8 +61,8 @@ public class BudgetReportController {
             return ResponseEntity.ok(report);
 
         } catch (Exception e) {
-            log.error("월별 리포트 조회 실패 - userId: {}, yearMonth: {}, error: {}",
-                    userId, yearMonth, e.getMessage(), e);
+            log.error("월별 리포트 조회 실패 - subject: {}, yearMonth: {}, error: {}",
+                    subject, yearMonth, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -72,12 +76,15 @@ public class BudgetReportController {
      */
     @PostMapping("/reports/{yearMonth}/ai-regenerate")
     public ResponseEntity<String> regenerateAiSummary(
-            @PathVariable("yearMonth") String yearMonth,
-            @RequestParam("userId") Long userId) {
-
-        log.info("AI 분석 재생성 요청 - userId: {}, yearMonth: {}", userId, yearMonth);
+            @AuthenticationPrincipal String subject,
+            @PathVariable("yearMonth") String yearMonth) {
 
         try {
+            // JWT subject에서 userId 추출
+            Long userId = Long.parseLong(subject);
+
+            log.info("AI 분석 재생성 요청 - userId: {}, yearMonth: {}", userId, yearMonth);
+
             if (!isValidYearMonth(yearMonth)) {
                 return ResponseEntity.badRequest().build();
             }
@@ -93,8 +100,8 @@ public class BudgetReportController {
             return ResponseEntity.ok(aiSummary);
 
         } catch (Exception e) {
-            log.error("AI 분석 재생성 실패 - userId: {}, yearMonth: {}, error: {}",
-                    userId, yearMonth, e.getMessage(), e);
+            log.error("AI 분석 재생성 실패 - subject: {}, yearMonth: {}, error: {}",
+                    subject, yearMonth, e.getMessage(), e);
             return ResponseEntity.internalServerError()
                     .body("AI 분석을 생성하는 중 오류가 발생했습니다.");
         }

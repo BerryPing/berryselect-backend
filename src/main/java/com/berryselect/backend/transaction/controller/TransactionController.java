@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -37,10 +38,13 @@ public class TransactionController {
      */
     @GetMapping("/transactions")
     public ResponseEntity<Page<TransactionDetailResponse>> getUserTransactions(
-            @RequestParam("userId") Long userId,
+            @AuthenticationPrincipal String subject,
             @RequestParam(value = "yearMonth", required = false) String yearMonth,
             @RequestParam(value = "categoryId", required = false) Long categoryId,
             @PageableDefault(size = 20, sort = "txTime") Pageable pageable) {
+
+        // JWT subject에서 userId 추출
+        Long userId = Long.parseLong(subject);
 
         log.info("거래 내역 조회 요청 - userId: {}, yearMonth: {}, categoryId: {}, page: {}",
                 userId, yearMonth, categoryId, pageable.getPageNumber());
@@ -69,8 +73,11 @@ public class TransactionController {
      */
     @GetMapping("/transactions/recommendation-rate")
     public ResponseEntity<Double> getRecommendationUsageRate(
-            @RequestParam("userId") Long userId,
+            @AuthenticationPrincipal String subject,
             @RequestParam("yearMonth") String yearMonth) {
+
+        // JWT subject에서 userId 추출
+        Long userId = Long.parseLong(subject);
 
         log.info("추천 사용률 조회 - userId: {}, yearMonth: {}", userId, yearMonth);
 
@@ -93,8 +100,11 @@ public class TransactionController {
      */
     @GetMapping("/transactions/total-saved")
     public ResponseEntity<Long> getTotalSavedAmount(
-            @RequestParam("userId") Long userId,
+            @AuthenticationPrincipal String subject,
             @RequestParam("yearMonth") String yearMonth) {
+
+        // JWT subject에서 userId 추출
+        Long userId = Long.parseLong(subject);
 
         log.info("총 절약금액 조회 - userId: {}, yearMonth: {}", userId, yearMonth);
 
