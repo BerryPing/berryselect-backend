@@ -25,46 +25,116 @@ public class NotificationController {
     // 내 알림 이력 조회
     @GetMapping
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getMyNotifications(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal String subject,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
-        Page<Notification> notificatons = notificationService.getUserNotifications(userId, pageable);
-        Page<NotificationResponse> responses = notificatons.map(NotificationResponse::from);
+        try {
+            // JWT subject에서 userId 추출
+            Long userId = Long.parseLong(subject);
 
-        return ResponseEntity.ok(ApiResponse.success(responses));
+            log.info("알림 이력 조회 요청 - userId: {}, page: {}", userId, pageable.getPageNumber());
+
+            Page<Notification> notifications = notificationService.getUserNotifications(userId, pageable);
+            Page<NotificationResponse> responses = notifications.map(NotificationResponse::from);
+
+            log.info("알림 이력 조회 완료 - userId: {}, 총 {}건, 현재 페이지 {}건",
+                    userId, notifications.getTotalElements(), notifications.getNumberOfElements());
+
+            return ResponseEntity.ok(ApiResponse.success(responses));
+
+        } catch (NumberFormatException e) {
+            log.error("유효하지 않은 사용자 ID - subject: {}", subject, e);
+            return ResponseEntity.badRequest().build();
+
+        } catch (Exception e) {
+            log.error("알림 이력 조회 실패 - subject: {}, error: {}", subject, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     // 읽지 않은 알림 개수 조회
     @GetMapping("/unread-count")
-    public ResponseEntity<ApiResponse<Long>> getUnreadCount(@AuthenticationPrincipal Long userId) {
-        Long unreadCount = notificationService.getUnreadCount(userId);
-        return ResponseEntity.ok(ApiResponse.success(unreadCount));
+    public ResponseEntity<ApiResponse<Long>> getUnreadCount(
+            @AuthenticationPrincipal String subject) {
+        try {
+            // JWT subject에서 userId 추출
+            Long userId = Long.parseLong(subject);
+
+            log.info("읽지 않은 알림 개수 조회 - userId: {}", userId);
+
+            Long unreadCount = notificationService.getUnreadCount(userId);
+
+            log.info("읽지 않은 알림 개수 조회 완료 - userId: {}, count: {}", userId, unreadCount);
+
+            return ResponseEntity.ok(ApiResponse.success(unreadCount));
+
+        } catch (NumberFormatException e) {
+            log.error("유효하지 않은 사용자 ID - subject: {}", subject, e);
+            return ResponseEntity.badRequest().build();
+
+        } catch (Exception e) {
+            log.error("읽지 않은 알림 개수 조회 실패 - subject: {}, error: {}", subject, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     // 알림 읽음 처리
     @PutMapping("/{id}/read")
-    public ResponseEntity<ApiResponse<Void>> markNotificationAsRead(@PathVariable Long id
-            , @AuthenticationPrincipal Long userId) {
+    public ResponseEntity<ApiResponse<Void>> markNotificationAsRead(
+            @AuthenticationPrincipal String subject,
+            @PathVariable Long id) {
 
-        notificationService.markNotificationAsRead(id, userId);
+        try {
+            // JWT subject에서 userId 추출
+            Long userId = Long.parseLong(subject);
 
-        log.info("알림 읽음 처리 요청 - notificationId: {}, userId: {}", id, userId);
+            log.info("알림 읽음 처리 요청 - notificationId: {}, userId: {}", id, userId);
 
-        return ResponseEntity.ok(ApiResponse.success(null));
+            notificationService.markNotificationAsRead(id, userId);
+
+            log.info("알림 읽음 처리 완료 - notificationId: {}, userId: {}", id, userId);
+
+            return ResponseEntity.ok(ApiResponse.success(null));
+
+        } catch (NumberFormatException e) {
+            log.error("유효하지 않은 사용자 ID - subject: {}", subject, e);
+            return ResponseEntity.badRequest().build();
+
+        } catch (Exception e) {
+            log.error("알림 읽음 처리 실패 - notificationId: {}, subject: {}, error: {}",
+                    id, subject, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
-    // 관리자용 알림 발송 테스트
+    // 알림 발송 테스트
     @PostMapping("/test")
     public ResponseEntity<ApiResponse<NotificationResponse>> sendTestNotification(
-            @RequestParam Long targetUserId,
-            @AuthenticationPrincipal Long adminUserId) {
+            @AuthenticationPrincipal String subject) {
 
-        // TODO: 관리자 권한 체크
-        Notification notification = notificationService.sendTestNotification(targetUserId);
-        NotificationResponse response = NotificationResponse.from(notification);
+        try {
+            // JWT subject에서 userId 추출 (본인에게만 발송)
+            Long userId = Long.parseLong(subject);
 
-        log.info("테스트 알림 발송 요청 - targetUserId: {}, adminUserId: {}", targetUserId, adminUserId);
+            log.info("테스트 알림 발송 요청 - userId: {} (본인에게 발송)", userId);
 
-        return ResponseEntity.ok(ApiResponse.success(response));
+            // 본인에게만 테스트 알림 발송
+            Notification notification = notificationService.sendTestNotification(userId);
+            NotificationResponse response = NotificationResponse.from(notification);
+
+            log.info("테스트 알림 발송 완료 - userId: {}, notificationId: {}",
+                    userId, notification.getId());
+
+            return ResponseEntity.ok(ApiResponse.success(response));
+
+        } catch (NumberFormatException e) {
+            log.error("유효하지 않은 사용자 ID - subject: {}", subject, e);
+            return ResponseEntity.badRequest().build();
+
+        } catch (Exception e) {
+            log.error("테스트 알림 발송 실패 - subject: {}, error: {}",
+                    subject, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
