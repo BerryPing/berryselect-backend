@@ -22,20 +22,7 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    /**
-     * 내 거래 내역 조회 (필터링 + 페이징)
-     *
-     * @param userId 사용자 ID
-     * @param yearMonth 조회 년월 (YYYY-MM, 선택사항)
-     * @param categoryId 카테고리 ID (선택사항)
-     * @param pageable 페이징 정보 (기본: 20개씩)
-     * @return 거래 상세 내역 목록 (페이징)
-     *
-     * 예시:
-     * GET /myberry/transactions?userId=1&yearMonth=2024-12&categoryId=1&page=0&size=20
-     * GET /myberry/transactions?userId=1&yearMonth=2024-12
-     * GET /myberry/transactions?userId=1
-     */
+    // 내 거래 내역 조회
     @GetMapping("/transactions")
     public ResponseEntity<Page<TransactionDetailResponse>> getUserTransactions(
             @AuthenticationPrincipal String subject,
@@ -64,13 +51,7 @@ public class TransactionController {
         }
     }
 
-    /**
-     * 월별 추천 사용률 조회 (별도 API)
-     *
-     * @param userId 사용자 ID
-     * @param yearMonth 조회 년월 (YYYY-MM)
-     * @return 추천 사용률 (0.0 ~ 1.0)
-     */
+    // 월별 추천 사용률 조회
     @GetMapping("/transactions/recommendation-rate")
     public ResponseEntity<Double> getRecommendationUsageRate(
             @AuthenticationPrincipal String subject,
@@ -91,13 +72,7 @@ public class TransactionController {
         }
     }
 
-    /**
-     * 월별 총 절약금액 조회 (별도 API)
-     *
-     * @param userId 사용자 ID
-     * @param yearMonth 조회 년월 (YYYY-MM)
-     * @return 총 절약금액
-     */
+    // 월별 총 절약금액 조회 (별도 API)
     @GetMapping("/transactions/total-saved")
     public ResponseEntity<Long> getTotalSavedAmount(
             @AuthenticationPrincipal String subject,
