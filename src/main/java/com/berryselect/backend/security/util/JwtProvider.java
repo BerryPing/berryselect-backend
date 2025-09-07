@@ -96,7 +96,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .setSubject(subject) // sub: 사용자 식별자
                 .setId(jti) // jti: 토큰 고유 ID (회전/블랙리스트용)
-                .claim("token_type", "refresh")  // ← 구분 클레임(권장: token_type)
+                .claim("token_type", "refresh")  // 구분 클레임
                 .setIssuedAt(now)
                 .setExpiration(exp)
                 .setIssuer(issuer)
@@ -135,7 +135,6 @@ public class JwtProvider {
         return parseClaims(token).getSubject();
     }
 
-    @SuppressWarnings("unchecked")
     public List<String> getRoles(String token){
         Object v = parseClaims(token).get("roles");
         if(v instanceof List<?> list){

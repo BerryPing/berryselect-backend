@@ -96,8 +96,6 @@ public class RegistrationController {
             }
         }
 
-
-
         // 6) users INSERT
         User user = User.builder()
                 .provider(User.Provider.KAKAO)
