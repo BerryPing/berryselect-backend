@@ -53,7 +53,7 @@ public class SecurityConfig {
                                 .preload(true)
                                 .maxAgeInSeconds(31536000) // 1년
                         )
-                        // API면 최소 CSP. (Swagger 쓰면 아래 줄을 완화하거나 주석 처리)
+                        // API면 최소 CSP
                         .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'none'"))
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
