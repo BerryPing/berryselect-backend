@@ -74,6 +74,12 @@ public class AuthService {
 
         // 기존 유저는 그대로 db업데이트 + 토큰 발급
         User user = byProvider.get();
+
+        // ⭐ 여기에 카카오 토큰 업데이트 로직 추가
+        user.setAccessToken(token.getAccessToken());
+        user.setRefreshToken(token.getRefreshToken());
+        user.setTokenExpiresAt(Instant.now().plusSeconds(token.getExpiresIn()));
+
         userRepository.save(user);
 
         String accessJwt = jwtProvider.createAccessToken(String.valueOf(user.getId()), List.of(new SimpleGrantedAuthority("ROLE_USER")));
