@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -22,7 +22,7 @@ public class TransactionDetailResponse {
     private String categoryName; // 카테고리명 (categories 테이블에서 조회)
     private String paymentCardName; // 결제 카드/자산명 (user_assets, products 테이블에서 조회)
     private Integer paidAmount; // 결제 금액
-    private LocalDateTime txTime; // 거래 일시
+    private Instant txTime; // 거래 일시
     @Builder.Default
     private List<AppliedBenefitResponse> appliedBenefits = List.of(); // 적용된 혜택 목록 (할인 상세)
     private Integer totalSavedAmount; // 총 할인받은 금액

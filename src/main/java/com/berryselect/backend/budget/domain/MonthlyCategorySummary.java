@@ -24,7 +24,7 @@ public class MonthlyCategorySummary {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "year_month", nullable = false, length = 7)
+    @Column(name = "`year_month`", nullable = false, length = 7)
     private String yearMonth;
 
     @Column(name = "category_id", nullable = false)

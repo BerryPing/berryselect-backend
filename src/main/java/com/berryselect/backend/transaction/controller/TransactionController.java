@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * 거래 내역 관련 API 컨트롤러
  */
 @RestController
-@RequestMapping("/myberry")
+@RequestMapping("/transactions")
 @RequiredArgsConstructor
 @Slf4j
 public class TransactionController {
@@ -23,7 +23,7 @@ public class TransactionController {
     private final TransactionService transactionService;
 
     // 내 거래 내역 조회
-    @GetMapping("/transactions")
+    @GetMapping("/list")
     public ResponseEntity<Page<TransactionDetailResponse>> getUserTransactions(
             @AuthenticationPrincipal String subject,
             @RequestParam(value = "yearMonth", required = false) String yearMonth,
@@ -31,7 +31,13 @@ public class TransactionController {
             @PageableDefault(size = 20, sort = "txTime") Pageable pageable) {
 
         // JWT subject에서 userId 추출
-        Long userId = Long.parseLong(subject);
+        // Long userId = Long.parseLong(subject);
+        Long userId;
+        if (subject == null || "anonymousUser".equals(subject)) {
+            userId = 2L;  // 테스트용 기본 계정
+        } else {
+            userId = Long.parseLong(subject);
+        }
 
         log.info("거래 내역 조회 요청 - userId: {}, yearMonth: {}, categoryId: {}, page: {}",
                 userId, yearMonth, categoryId, pageable.getPageNumber());
@@ -52,13 +58,19 @@ public class TransactionController {
     }
 
     // 월별 추천 사용률 조회
-    @GetMapping("/transactions/recommendation-rate")
+    @GetMapping("/recommendation-rate")
     public ResponseEntity<Double> getRecommendationUsageRate(
             @AuthenticationPrincipal String subject,
             @RequestParam("yearMonth") String yearMonth) {
 
         // JWT subject에서 userId 추출
-        Long userId = Long.parseLong(subject);
+        //Long userId = Long.parseLong(subject);
+        Long userId;
+        if (subject == null || "anonymousUser".equals(subject)) {
+            userId = 2L;  // 테스트용 기본 계정
+        } else {
+            userId = Long.parseLong(subject);
+        }
 
         log.info("추천 사용률 조회 - userId: {}, yearMonth: {}", userId, yearMonth);
 
@@ -72,14 +84,20 @@ public class TransactionController {
         }
     }
 
-    // 월별 총 절약금액 조회 (별도 API)
-    @GetMapping("/transactions/total-saved")
+    // 월별 총 절약금액 조회
+    @GetMapping("/total-saved")
     public ResponseEntity<Long> getTotalSavedAmount(
             @AuthenticationPrincipal String subject,
             @RequestParam("yearMonth") String yearMonth) {
 
         // JWT subject에서 userId 추출
-        Long userId = Long.parseLong(subject);
+        //Long userId = Long.parseLong(subject);
+        Long userId;
+        if (subject == null || "anonymousUser".equals(subject)) {
+            userId = 2L;  // 테스트용 기본 계정
+        } else {
+            userId = Long.parseLong(subject);
+        }
 
         log.info("총 절약금액 조회 - userId: {}, yearMonth: {}", userId, yearMonth);
 

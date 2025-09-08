@@ -68,8 +68,8 @@ public class TransactionMapper {
             return null;
         }
 
-        String sourceType = appliedBenefit.getSourceType().name();
-        String sourceTypeKorean = appliedBenefit.getSourceType().getKoreanName();
+        String sourceType = appliedBenefit.getSourceType();
+        String sourceTypeKorean = toKoreanSourceType(sourceType);
 
         return AppliedBenefitResponse.builder()
                 .id(appliedBenefit.getId())
@@ -95,5 +95,15 @@ public class TransactionMapper {
         return appliedBenefits.stream()
                 .map(benefit -> toBenefitResponse(benefit, null, null))
                 .collect(Collectors.toList());
+    }
+
+    private String toKoreanSourceType(String sourceType) {
+        if (sourceType == null) return "기타";
+        return switch (sourceType) {
+            case "CARD" -> "카드";
+            case "MEMBERSHIP" -> "멤버십";
+            case "GIFTICON" -> "기프티콘";
+            default -> "기타";
+        };
     }
 }

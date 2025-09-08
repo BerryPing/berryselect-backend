@@ -25,9 +25,19 @@ public class BudgetReportController {
             @AuthenticationPrincipal String subject,
             @PathVariable("yearMonth") String yearMonth) {
 
+
+
+        log.info("yearMonth 파라미터: '{}' (length: {})", yearMonth, yearMonth != null ? yearMonth.length() : 0);
+
         try {
             // JWT subject에서 userId 추출
-            Long userId = Long.parseLong(subject);
+            //Long userId = Long.parseLong(subject);
+            Long userId;
+            if (subject == null || "anonymousUser".equals(subject)) {
+                userId = 2L;  // 테스트용 기본 계정
+            } else {
+                userId = Long.parseLong(subject);
+            }
 
             log.info("월별 리포트 조회 요청 - userId: {}, yearMonth: {}", userId, yearMonth);
 
@@ -59,7 +69,13 @@ public class BudgetReportController {
 
         try {
             // JWT subject에서 userId 추출
-            Long userId = Long.parseLong(subject);
+            // Long userId = Long.parseLong(subject);
+            Long userId;
+            if (subject == null || "anonymousUser".equals(subject)) {
+                userId = 2L;  // 테스트용 기본 계정
+            } else {
+                userId = Long.parseLong(subject);
+            }
 
             log.info("AI 분석 재생성 요청 - userId: {}, yearMonth: {}", userId, yearMonth);
 

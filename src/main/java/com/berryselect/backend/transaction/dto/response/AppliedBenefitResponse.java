@@ -1,6 +1,5 @@
 package com.berryselect.backend.transaction.dto.response;
 
-import com.berryselect.backend.transaction.domain.SourceType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

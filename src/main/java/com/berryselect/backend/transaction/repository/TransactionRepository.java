@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
+
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
@@ -33,30 +35,32 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      * 추천 사용률 계산용 - 베리픽 결제 추천을 통해 결제한 거래 수
      * - 프론트: 요약 페이지 추천 사용률 표시
      */
-    @Query(value = """
-        SELECT COUNT(t)
-        FROM Transaction t
-        WHERE t.userId = :userId
+    @Query("""
+      SELECT COUNT(t) FROM Transaction t
+      WHERE t.userId = :userId
         AND t.sessionId IS NOT NULL
-        AND DATE_FORMAT(t.txTime, '%Y-%m') = :yearMonth
-        """)
+        AND t.txTime >= :start
+        AND t.txTime < :end
+    """)
     Long countRecommendationUsedTransactions(
             @Param("userId") Long userId,
-            @Param("yearMonth") String yearMonth
+            @Param("start") Instant start,
+            @Param("end") Instant end
     );
 
     /**
      * 추천 사용률 계산용 - 해당 월 전체 거래 수 (베리픽 결제 추천 없이 일반 거래도 포함)
      * - 프론트: 요약 페이지 추천 사용률 표시
      */
-    @Query(value = """
-        SELECT COUNT(t)
-        FROM Transaction t
-        WHERE t.userId = :userId
-        AND DATE_FORMAT(t.txTime, '%Y-%m') = :yearMonth
-        """)
+    @Query("""
+      SELECT COUNT(t) FROM Transaction t
+      WHERE t.userId = :userId
+        AND t.txTime >= :start
+        AND t.txTime < :end
+    """)
     Long countTotalTransactionsByMonth(
             @Param("userId") Long userId,
-            @Param("yearMonth") String yearMonth
+            @Param("start") Instant start,
+            @Param("end") Instant end
     );
 }

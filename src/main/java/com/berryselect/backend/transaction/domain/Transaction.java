@@ -1,22 +1,17 @@
 package com.berryselect.backend.transaction.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.*;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
 
 @Entity
 @Table(name = "transactions")
 @Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Transaction {
 
     @Id
@@ -43,26 +38,28 @@ public class Transaction {
     @Column(name = "payment_method", length = 40)
     private String paymentMethod;
 
-    @Column(name = "session_id")
-    private Long sessionId;
-
-    @Column(name = "option_id")
-    private Long optionId;
-
     @Column(name = "payment_asset_id")
     private Long paymentAssetId;
 
     @Column(name = "paid_amount", nullable = false)
     private Integer paidAmount;
 
-    @Column(name = "tx_time", nullable = false, columnDefinition = "DATETIME(3)")
-    private LocalDateTime txTime;
+    @Column(name = "tx_time", nullable = false, updatable = false)
+    private Instant txTime;
 
-    @CreationTimestamp
-    @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(3)" )
-    private LocalDateTime createdAt;
+    @Column(name = "option_id")
+    private Long optionId;
 
-    @OneToMany(mappedBy = "txId", fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<AppliedBenefit> appliedBenefits = new ArrayList<>();
+    @Column(name = "session_id")
+    private Long sessionId;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @PrePersist
+    void prePersist() {
+        Instant now = Instant.now();
+        if (txTime == null) txTime = now;
+        if (createdAt == null) createdAt = now;
+    }
 }

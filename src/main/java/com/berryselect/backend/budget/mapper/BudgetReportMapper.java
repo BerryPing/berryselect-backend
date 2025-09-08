@@ -46,6 +46,9 @@ public class BudgetReportMapper {
                 .categorySpending(categorySpending != null ? categorySpending : List.of())
                 .recommendationUsage(recommendationUsage)
                 .aiSummary(aiSummary)
+                .savingRate(savingRate != null ? savingRate : 0.0) // 절약률 기본값
+                .spentChangeFromLastMonth(0L)                      // 전월 대비 지출 변화량 기본값
+                .savedChangeFromLastMonth(0L)                      // 전월 대비 절약 변화량 기본값
                 .build();
     }
 

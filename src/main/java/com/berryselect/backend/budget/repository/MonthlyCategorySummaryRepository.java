@@ -17,22 +17,4 @@ public interface MonthlyCategorySummaryRepository extends JpaRepository<MonthlyC
      */
     List<MonthlyCategorySummary> findByUserIdAndYearMonthOrderByAmountSpentDesc(Long userId, String yearMonth);
 
-    /**
-     * 사용자 월별 전체 요약 통계 (총 지출, 총 절약, 총 거래건수)
-     * - 프론트: 요약 페이지 상단 통계 수치
-     * - 반환값: [총지출액, 총절약액, 총거래건수]
-     */
-    @Query(value = """
-        SELECT
-             COALESCE(SUM(mcs.amountSpent), 0),
-             COALESCE(SUM(mcs.amountSaved), 0),
-             COALESCE(SUM(mcs.txCount), 0)
-        FROM MonthlyCategorySummary mcs
-        WHERE mcs.userId = :userId
-        AND mcs.yearMonth = :yearMonth
-        """)
-    Object[] getTotalSummaryByUserAndMonth(
-            @Param("userId") Long userId,
-            @Param("yearMonth") String yearMonth
-    );
 }

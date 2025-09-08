@@ -20,7 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Instant;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,23 +49,29 @@ public class ReportService {
     public MonthlyReportDetailResponse getMonthlyReportDetail(Long userId, String yearMonth) {
         log.info("월별 상세 리포트 조회 - userId: {}, yearMonth: {}", userId, yearMonth);
 
-        List<MonthlyCategorySummary> summaries = monthlyCategorySummaryRepository
-                .findByUserIdAndYearMonthOrderByAmountSpentDesc(userId, yearMonth);
+        // 1. 월별 요약 데이터 로드
+        List<MonthlyCategorySummary> summaries =
+                monthlyCategorySummaryRepository.findByUserIdAndYearMonthOrderByAmountSpentDesc(userId, yearMonth);
 
-        Object[] totalStats = monthlyCategorySummaryRepository
-                .getTotalSummaryByUserAndMonth(userId, yearMonth);
+        // 2. 리스트에서 직접 총 지출/절약/건수를 계산
+        Long totalSpent = summaries.stream()
+                .mapToLong(MonthlyCategorySummary::getAmountSpent)
+                .sum();
+        Long totalSaved = summaries.stream()
+                .mapToLong(MonthlyCategorySummary::getAmountSaved)
+                .sum();
+        Integer totalTransactionCount = summaries.stream()
+                .mapToInt(MonthlyCategorySummary::getTxCount)
+                .sum();
 
-        Long totalSpent = totalStats != null ? (Long) totalStats[0] : 0L;
-        Long totalSaved = totalStats != null ? (Long) totalStats[1] : 0L;
-        Integer totalTransactionCount = totalStats != null ?
-                ((Number) totalStats[2]).intValue() : 0;
+        // 3. 기타 계산 및 응답 DTO 생성
+        List<CategorySpendingResponse> categorySpending =
+                createCategorySpendingResponses(summaries, totalSpent);
 
-        List<CategorySpendingResponse> categorySpending = createCategorySpendingResponses(summaries, totalSpent);
-
-        RecommendationUsageResponse recommendationUsage = createRecommendationUsageResponse(userId, yearMonth);
+        RecommendationUsageResponse recommendationUsage =
+                createRecommendationUsageResponse(userId, yearMonth);
 
         String aiSummary = getOrGenerateAiSummary(userId, yearMonth, summaries);
-
         Double savingRate = calculateSavingRate(totalSaved, totalSpent);
 
         return budgetReportMapper.toMonthlyReportDetailResponse(
@@ -128,14 +136,17 @@ public class ReportService {
     }
 
     private RecommendationUsageResponse createRecommendationUsageResponse(Long userId, String yearMonth) {
-        Long totalTransactions = transactionRepository.countTotalTransactionsByMonth(userId, yearMonth);
-        Long recommendationUsedTransactions = transactionRepository
-                .countRecommendationUsedTransactions(userId, yearMonth);
+        // KST 기준 범위 계산
+        Instant[] range = getStartEndUtc(yearMonth);
+        Instant startUtc = range[0];
+        Instant endUtc   = range[1];
+
+        // 변경된 Repository 메서드 호출
+        Long totalTransactions = transactionRepository.countTotalTransactionsByMonth(userId, startUtc, endUtc);
+        Long recommendationUsedTransactions = transactionRepository.countRecommendationUsedTransactions(userId, startUtc, endUtc);
 
         BigDecimal usageRate = calculateUsageRate(recommendationUsedTransactions, totalTransactions);
-
-        Long totalSavedFromRecommendation = calculateSavedFromRecommendations(userId, yearMonth);
-
+        Long totalSavedFromRecommendation = calculateSavedFromRecommendations(userId, startUtc, endUtc);
         Long averageSaving = calculateAverageSaving(totalSavedFromRecommendation, recommendationUsedTransactions);
 
         return budgetReportMapper.toRecommendationUsageResponse(
@@ -156,7 +167,9 @@ public class ReportService {
     // ReportType.AI → "AI" 변환
     private String getAiSummary(Long userId, String yearMonth) {
         return analysisReportRepository
-                .findByUserIdAndYearMonthAndReportType(userId, YearMonth.parse(yearMonth), ReportType.AI.name())
+                .findByUserIdAndYearMonthAndReportType(userId, yearMonth, ReportType.AI)
+                .stream()
+                .findFirst()
                 .map(AnalysisReport::getContent)
                 .orElse(null);
     }
@@ -178,17 +191,15 @@ public class ReportService {
         }
     }
 
-    private Long calculateSavedFromRecommendations(Long userId, String yearMonth) {
-        Long totalSaved = appliedBenefitRepository.getTotalSavedByUserAndMonth(userId, yearMonth);
-        Double usageRate = getRecommendationUsageRate(userId, yearMonth);
-
+    private Long calculateSavedFromRecommendations(Long userId, Instant startUtc, Instant endUtc) {
+        Long totalSaved = appliedBenefitRepository.getTotalSavedByUserAndMonth(userId, startUtc, endUtc);
+        Double usageRate = getRecommendationUsageRate(userId, startUtc, endUtc);
         return Math.round(totalSaved * usageRate);
     }
 
-    private Double getRecommendationUsageRate(Long userId, String yearMonth) {
-        Long totalTransactions = transactionRepository.countTotalTransactionsByMonth(userId, yearMonth);
-        Long recommendationUsedTransactions = transactionRepository
-                .countRecommendationUsedTransactions(userId, yearMonth);
+    private Double getRecommendationUsageRate(Long userId, Instant startUtc, Instant endUtc) {
+        Long totalTransactions = transactionRepository.countTotalTransactionsByMonth(userId, startUtc, endUtc);
+        Long recommendationUsedTransactions = transactionRepository.countRecommendationUsedTransactions(userId, startUtc, endUtc);
 
         if (totalTransactions == 0) {
             return 0.0;
@@ -236,5 +247,13 @@ public class ReportService {
         return categoryRepository.findById(categoryId)
                 .map(Category::getName)
                 .orElse("기타");
+    }
+
+    private Instant[] getStartEndUtc(String yearMonth) {
+        YearMonth ym = YearMonth.parse(yearMonth);
+        ZoneId kst = ZoneId.of("Asia/Seoul");
+        Instant startUtc = ym.atDay(1).atStartOfDay(kst).toInstant();
+        Instant endUtc   = ym.plusMonths(1).atDay(1).atStartOfDay(kst).toInstant();
+        return new Instant[]{startUtc, endUtc};
     }
 }

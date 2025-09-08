@@ -5,7 +5,6 @@ import com.berryselect.backend.merchant.repository.CategoryRepository;
 import com.berryselect.backend.merchant.repository.MerchantRepository;
 import com.berryselect.backend.transaction.domain.AppliedBenefit;
 import com.berryselect.backend.transaction.domain.Transaction;
-import com.berryselect.backend.transaction.domain.SourceType;
 import com.berryselect.backend.transaction.dto.response.AppliedBenefitResponse;
 import com.berryselect.backend.transaction.dto.response.TransactionDetailResponse;
 import com.berryselect.backend.transaction.mapper.TransactionMapper;
@@ -19,6 +18,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,26 +84,38 @@ public class TransactionService {
      * 월별 추천 사용률 계산
      */
     public Double getRecommendationUsageRate(Long userId, String yearMonth) {
-        log.info("추천 사용률 계산 - userId: {}, yearMonth: {}", userId, yearMonth);
+        // 문자열 "YYYY-MM" → YearMonth
+        YearMonth ym = YearMonth.parse(yearMonth);
 
-        Long totalTransactions = transactionRepository.countTotalTransactionsByMonth(userId, yearMonth);
-        Long recommendationUsedTransactions = transactionRepository
-                .countRecommendationUsedTransactions(userId, yearMonth);
+        // Asia/Seoul 기준 해당 월 첫날 00:00과 다음 달 첫날 00:00
+        ZonedDateTime startKst = ym.atDay(1).atStartOfDay(ZoneId.of("Asia/Seoul"));
+        ZonedDateTime endKst   = ym.plusMonths(1).atDay(1).atStartOfDay(ZoneId.of("Asia/Seoul"));
 
-        if (totalTransactions == 0) {
+        // UTC Instant로 변환 (DB에 저장된 tx_time은 UTC 기준)
+        Instant startUtc = startKst.toInstant();
+        Instant endUtc   = endKst.toInstant();
+
+        // 수정한 Repository 메서드 호출
+        Long total = transactionRepository.countTotalTransactionsByMonth(userId, startUtc, endUtc);
+        Long used  = transactionRepository.countRecommendationUsedTransactions(userId, startUtc, endUtc);
+
+        if (total == 0) {
             return 0.0;
         }
-
-        return recommendationUsedTransactions.doubleValue() / totalTransactions.doubleValue();
+        return used.doubleValue() / total.doubleValue();
     }
 
     /**
      * 월별 총 절약금액 조회
      */
     public Long getTotalSavedAmount(Long userId, String yearMonth) {
-        log.info("월별 총 절약금액 조회 - userId: {}, yearMonth: {}", userId, yearMonth);
+        YearMonth ym = YearMonth.parse(yearMonth);
+        ZonedDateTime startKst = ym.atDay(1).atStartOfDay(ZoneId.of("Asia/Seoul"));
+        ZonedDateTime endKst   = ym.plusMonths(1).atDay(1).atStartOfDay(ZoneId.of("Asia/Seoul"));
+        Instant startUtc = startKst.toInstant();
+        Instant endUtc   = endKst.toInstant();
 
-        return appliedBenefitRepository.getTotalSavedByUserAndMonth(userId, yearMonth);
+        return appliedBenefitRepository.getTotalSavedByUserAndMonth(userId, startUtc, endUtc);
     }
 
     // ===== 내부 헬퍼 메서드 =====
@@ -110,10 +125,10 @@ public class TransactionService {
             return Map.of();
         }
 
-        List<AppliedBenefit> allBenefits = appliedBenefitRepository.findByTxIdIn(txIds);
+        List<AppliedBenefit> allBenefits = appliedBenefitRepository.findByTx_TxIdIn(txIds);
 
         return allBenefits.stream()
-                .collect(Collectors.groupingBy(AppliedBenefit::getTxId));
+                .collect(Collectors.groupingBy(ab -> ab.getTx().getTxId()));
     }
 
     private AppliedBenefitResponse convertToBenefitResponse(AppliedBenefit benefit) {
@@ -164,7 +179,6 @@ public class TransactionService {
 
         return userAssetRepository.findById(paymentAssetId)
                 .map(asset -> {
-                    // 팀원이 @EntityGraph로 product를 함께 조회하도록 설정
                     if (asset.getProduct() != null) {
                         return asset.getProduct().getName();
                     }
@@ -176,9 +190,10 @@ public class TransactionService {
     /**
      * 혜택 소스명 조회
      */
-    private String getSourceName(Long sourceRef, SourceType sourceType) {
+    private String getSourceName(Long sourceRef, String sourceType) {
+        String fallback = toKoreanSourceType(sourceType);
         if (sourceRef == null) {
-            return sourceType.getKoreanName();
+            return fallback;
         }
 
         return userAssetRepository.findById(sourceRef)
@@ -186,9 +201,19 @@ public class TransactionService {
                     if (asset.getProduct() != null) {
                         return asset.getProduct().getName();
                     }
-                    return sourceType.getKoreanName();
+                    return fallback;
                 })
-                .orElse(sourceType.getKoreanName());
+                .orElse(fallback);
+    }
+
+    private String toKoreanSourceType(String sourceType) {
+        if (sourceType == null) return "기타";
+        return switch (sourceType) {
+            case "CARD" -> "카드";
+            case "MEMBERSHIP" -> "멤버십";
+            case "GIFTICON" -> "기프티콘";
+            default -> "기타";
+        };
     }
 
     private String generateBenefitDescription(AppliedBenefit benefit) {
