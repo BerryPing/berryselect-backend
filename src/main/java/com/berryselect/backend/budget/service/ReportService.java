@@ -94,6 +94,21 @@ public class ReportService {
         List<MonthlyCategorySummary> summaries = monthlyCategorySummaryRepository
                 .findByUserIdAndYearMonthOrderByAmountSpentDesc(userId, yearMonth);
 
+        log.info("=== Repository 조회 파라미터 ===");
+        log.info("조회할 userId: '{}' (타입: {})", userId, userId.getClass().getSimpleName());
+        log.info("조회할 yearMonth: '{}' (타입: {})", yearMonth, yearMonth.getClass().getSimpleName());
+        log.info("조회 결과 개수: {}", summaries.size());
+
+        if (summaries.isEmpty()) {
+            log.warn("Repository에서 데이터를 찾지 못함!");
+        } else {
+            log.info("첫 번째 데이터: userId={}, yearMonth={}, categoryId={}, amountSpent={}",
+                    summaries.get(0).getUserId(),
+                    summaries.get(0).getYearMonth(),
+                    summaries.get(0).getCategoryId(),
+                    summaries.get(0).getAmountSpent());
+        }
+
         // 새로 AI 리포트 생성
         String aiContent = generateAiSummaryContent(yearMonth, summaries);
         if(aiContent == null) {
