@@ -1,5 +1,6 @@
 package com.berryselect.backend.notification.service;
 
+import com.berryselect.backend.auth.domain.User;
 import com.berryselect.backend.auth.repository.UserRepository;
 import com.berryselect.backend.common.exception.ApiException;
 import com.berryselect.backend.notification.domain.Notification;
@@ -14,6 +15,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -79,9 +81,14 @@ public class KakaoNotificationAdapter {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new ApiException("USER_NOT_FOUND", "사용자를 찾을 수 없습니다."));
 
+            // 디버깅 로그 추가
+            log.info("=== 토큰 만료 체크 시작 ===");
+            log.info("토큰 만료시간: {}", user.getTokenExpiresAt());
+            log.info("현재 시간: {}", Instant.now());
+
             // 토큰 만료 확인
             if(user.getTokenExpiresAt() != null &&
-                user.getTokenExpiresAt().isBefore(LocalDateTime.now())) {
+                user.getTokenExpiresAt().isBefore(Instant.now())) {
                 log.warn("사용자의 카카오 토큰이 만료됨 - userId: {}", userId);
                 // TODO : refresh_token으로 갱신 로직 구현
                 throw new ApiException("KAKAO_TOKEN_EXPIRED", "카카오 토큰이 만료되었습니다.");
