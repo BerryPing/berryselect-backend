@@ -1,5 +1,6 @@
 package com.berryselect.backend.wallet.service;
 
+import com.berryselect.backend.auth.dto.response.UserSettingsResponse;
 import com.berryselect.backend.wallet.adapter.client.SettingsApiClient;
 import com.berryselect.backend.wallet.domain.GifticonRedemption;
 import com.berryselect.backend.wallet.domain.UserAsset;
@@ -34,7 +35,7 @@ public class WalletService {
     private final ProductRepository productRepository;
     private final GifticonRedemptionRepository gifticonRedemptionRepository;
     private final SettingsApiClient settingsApiClient;
-    private final com.berryselect.backend.wallet.service.BenefitAggregationService benefitAggregationService;
+    private final BenefitAggregationService benefitAggregationService;
 
     /**
      * =====================
