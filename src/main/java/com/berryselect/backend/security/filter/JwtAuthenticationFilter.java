@@ -32,7 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         return path.startsWith("/auth")
                 || path.startsWith("/actuator/health")
-                || path.startsWith("/merchants");  // 👈 가맹점 검색 API 전체 제외
+                || path.startsWith("/merchants") // 👈 가맹점 검색 API 전체 제외
+                || path.startsWith("/myberry/reports")
+                || path.startsWith("/transactions")
+                || path.startsWith("/recommendations");
     }
 
     @Override
