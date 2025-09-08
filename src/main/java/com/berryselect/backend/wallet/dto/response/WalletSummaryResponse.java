@@ -11,12 +11,12 @@ import java.util.List;
 @AllArgsConstructor
 public class WalletSummaryResponse {
     private String type; // "CARD"
-    private List<AssetSummary> items;
+    private List<CardSummary> items;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class AssetSummary {
+    public static class CardSummary {
         private Long id;
         private String productName;
         private String issuer;
