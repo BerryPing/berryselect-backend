@@ -5,6 +5,7 @@ import com.berryselect.backend.auth.dto.response.UserProfileResponse;
 import com.berryselect.backend.auth.dto.response.UserSettingsResponse;
 import com.berryselect.backend.auth.repository.UserRepository;
 import com.berryselect.backend.auth.service.UserProfileService;
+import com.berryselect.backend.auth.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final UserProfileService userProfileService;
+    private final UserSettingsService userSettingsService;
 
     // Authorization : Bearer <우리 JWT> 필요 (SecurityConfig에 의해 보호됨)
     @GetMapping("/me")
@@ -41,13 +43,12 @@ public class UserController {
     public ResponseEntity<UserSettingsResponse> getSettings(
             Authentication auth,
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId  // Security 연동 전
-
             // @AuthenticationPrincipal SecurityPrincipal principal  // Security 연동 후
     ) {
         Long userId = resolveUserId(auth, headerUserId);  // Security 연동 전
         // Long userId = principal.getId();   // Security 연동 후
 
-        return ResponseEntity.ok(userProfileService.getSettings(userId));
+        return ResponseEntity.ok(userSettingsService.getSettings(userId));
     }
 
 
@@ -56,16 +57,14 @@ public class UserController {
     public ResponseEntity<UserSettingsResponse> updateSettings(
             Authentication auth,
             @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,  // Security 연동 전
-            @RequestBody UpdateUserSettingsRequest req
-
             // @AuthenticationPrincipal SecurityPrincipal principal,  // Security 연동 후
-            // @RequestBody UpdateUserSettingsRequest req
+            @RequestBody UpdateUserSettingsRequest req
     ) {
 
         Long userId = resolveUserId(auth, headerUserId);  // Security 연동 전
         // Long userId = principal.getId();  // Security 연동 후
 
-        return ResponseEntity.ok(userProfileService.updateSettings(userId, req));
+        return ResponseEntity.ok(userSettingsService.updateSettings(userId, req));
     }
 
     // Security 연동 전
