@@ -4,7 +4,6 @@ import com.berryselect.backend.wallet.domain.Brand;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,11 +22,9 @@ public class MerchantCache {
     @JoinColumn(name = "brand_id")
     private Brand brand;
 
-    @Column(precision = 9, scale = 6)
-    private BigDecimal lat;
+    private Double lat;
 
-    @Column(precision = 9, scale = 6)
-    private BigDecimal lng;
+    private Double lng;
 
     @Column(length = 255)
     private String address;
@@ -35,4 +32,5 @@ public class MerchantCache {
     @Column(name = "created_at", updatable = false, insertable = false,
             columnDefinition = "DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3)")
     private LocalDateTime createdAt;
+
 }

@@ -14,8 +14,8 @@ public final class WalletMapper {
      * Card
      * =====================
      */
-    public static WalletSummaryResponse.AssetSummary toCardSummary(UserAsset ua) {
-        return new WalletSummaryResponse.AssetSummary(
+    public static WalletSummaryResponse.CardSummary toCardSummary(UserAsset ua) {
+        return new WalletSummaryResponse.CardSummary(
                 ua.getId(),
                 ua.getProduct().getName(),
                 ua.getProduct().getIssuer(),
@@ -38,14 +38,14 @@ public final class WalletMapper {
     public static List<CardBenefitsResponse.BenefitGroup> filterBenefits(
             UserAsset card, List<String> preferredCategories
     ) {
-        // benefits 연동 전
+        // TODO : benefits 연동 전
         return Collections.emptyList();
     }
 
     public static List<CardBenefitsResponse.BenefitGroup> filterOtherBenefits(
             UserAsset card, List<String> preferredCategories
     ) {
-        // benefits 연동 전
+        // TODO : benefits 연동 전
         return Collections.emptyList();
     }
 

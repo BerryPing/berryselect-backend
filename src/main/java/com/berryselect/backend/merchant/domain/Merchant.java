@@ -7,7 +7,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -34,11 +33,9 @@ public class Merchant {
     @JoinColumn(name = "category_id", insertable = false, updatable = false)
     private Category category;
 
-    @Column(precision = 9, scale = 6)
-    private BigDecimal lat;
+    private Double lat;
 
-    @Column(precision = 9, scale = 6)
-    private BigDecimal lng;
+    private Double lng;
 
     @Column(length = 255)
     private String address;
