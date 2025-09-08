@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "brands")
@@ -20,9 +19,9 @@ public class Brand {
     @Column(nullable = false, length = 120)
     private String name;
 
-    @Convert(converter = StringListJsonConverter.class)
-    @Column(columnDefinition = "json")
-    private List<String> aliases;
+//    @Convert(converter = StringListJsonConverter.class)
+//    @Column(columnDefinition = "json")
+//    private List<String> aliases;
 
     @Column(name = "category_id")
     private Long categoryId;

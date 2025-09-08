@@ -3,8 +3,14 @@ package com.berryselect.backend.transaction.service;
 import com.berryselect.backend.merchant.domain.Category;
 import com.berryselect.backend.merchant.repository.CategoryRepository;
 import com.berryselect.backend.merchant.repository.MerchantRepository;
+import com.berryselect.backend.recommendation.domain.RecommendationOption;
+import com.berryselect.backend.recommendation.domain.RecommendationSession;
+import com.berryselect.backend.recommendation.repository.RecommendationOptionRepository;
+import com.berryselect.backend.recommendation.repository.RecommendationSessionRepository;
 import com.berryselect.backend.transaction.domain.AppliedBenefit;
 import com.berryselect.backend.transaction.domain.Transaction;
+import com.berryselect.backend.transaction.dto.request.TransactionRequest;
+import com.berryselect.backend.transaction.dto.response.TransactionResponse;
 import com.berryselect.backend.transaction.dto.response.AppliedBenefitResponse;
 import com.berryselect.backend.transaction.dto.response.TransactionDetailResponse;
 import com.berryselect.backend.transaction.mapper.TransactionMapper;
@@ -40,6 +46,63 @@ public class TransactionService {
     private final CategoryRepository categoryRepository;
     private final MerchantRepository merchantRepository;
     private final UserAssetRepository userAssetRepository;
+    private final RecommendationSessionRepository sessionRepository;
+    private final RecommendationOptionRepository optionRepository;
+
+    @Transactional
+    public TransactionResponse createTransaction(TransactionRequest req, Long userId) {
+        RecommendationSession session = sessionRepository.findById(req.getSessionId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid sessionId"));
+
+        RecommendationOption option = optionRepository.findById(req.getOptionId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid optionId"));
+
+        if (!option.getSession().getSessionId().equals(session.getSessionId())) {
+            throw new IllegalArgumentException("Option does not belong to this session");
+        }
+
+        // ✅ 거래 저장
+        Transaction tx = Transaction.builder()
+                .userId(userId)
+                .merchantId(req.getMerchantId())
+                .sessionId(session.getSessionId())
+                .optionId(option.getOptionId())
+                .paidAmount(req.getPaidAmount())
+                .txTime(Instant.now())
+                .build();
+        transactionRepository.save(tx);
+
+        // ✅ 적용 혜택 저장
+        List<AppliedBenefit> benefits = option.getItems().stream()
+                .filter(i -> i.getRuleId() != null)
+                .map(i -> AppliedBenefit.builder()
+                        .tx(tx)
+                        .ruleId(i.getRuleId())
+                        .sourceType(i.getComponentType())
+                        .sourceRef(i.getComponentRefId())
+                        .savedAmount(i.getAppliedValue())
+                        .build())
+                .toList();
+        appliedBenefitRepository.saveAll(benefits);
+
+        return TransactionResponse.builder()
+                .txId(tx.getTxId())
+                .userId(userId)
+                .merchantId(req.getMerchantId())
+                .paidAmount(req.getPaidAmount())
+                .txTime(tx.getTxTime())
+                .appliedBenefits(
+                        benefits.stream()
+                                .map(b -> TransactionResponse.AppliedBenefitDto.builder()
+                                        .ruleId(b.getRuleId())
+                                        .sourceType(b.getSourceType())
+                                        .sourceRef(b.getSourceRef())
+                                        .savedAmount(b.getSavedAmount())
+                                        .build())
+                                .toList()
+                )
+                .build();
+    }
 
     /**
      * 사용자 거래 내역 조회
@@ -117,6 +180,8 @@ public class TransactionService {
 
         return appliedBenefitRepository.getTotalSavedByUserAndMonth(userId, startUtc, endUtc);
     }
+
+
 
     // ===== 내부 헬퍼 메서드 =====
 
@@ -220,3 +285,6 @@ public class TransactionService {
         return String.format("%,d원 절약", benefit.getSavedAmount());
     }
 }
+
+
+

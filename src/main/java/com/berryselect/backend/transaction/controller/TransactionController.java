@@ -1,6 +1,8 @@
 package com.berryselect.backend.transaction.controller;
 
+import com.berryselect.backend.transaction.dto.request.TransactionRequest;
 import com.berryselect.backend.transaction.dto.response.TransactionDetailResponse;
+import com.berryselect.backend.transaction.dto.response.TransactionResponse;
 import com.berryselect.backend.transaction.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -110,4 +112,13 @@ public class TransactionController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    @PostMapping
+    public TransactionResponse createTransaction(
+            @RequestBody TransactionRequest request,
+            @RequestHeader("X-USER-ID") Long userId
+    ) {
+        return transactionService.createTransaction(request, userId);
+    }
 }
+
+
