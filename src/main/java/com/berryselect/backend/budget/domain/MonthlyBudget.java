@@ -26,7 +26,7 @@ public class MonthlyBudget {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "year_month", length = 7, nullable = false)
+    @Column(name = "`year_month`", length = 7, nullable = false)
     private String yearMonth;
 
     @Column(name = "amount_target", nullable = false)
