@@ -1,5 +1,6 @@
 package com.berryselect.backend.wallet.service;
 
+import com.berryselect.backend.auth.dto.response.UserSettingsResponse;
 import com.berryselect.backend.wallet.adapter.client.SettingsApiClient;
 import com.berryselect.backend.wallet.domain.GifticonRedemption;
 import com.berryselect.backend.wallet.domain.UserAsset;
@@ -25,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +35,7 @@ public class WalletService {
     private final ProductRepository productRepository;
     private final GifticonRedemptionRepository gifticonRedemptionRepository;
     private final SettingsApiClient settingsApiClient;
+    private final BenefitAggregationService benefitAggregationService;
 
     /**
      * =====================
@@ -62,10 +65,35 @@ public class WalletService {
         UserAsset card = userAssetRepository
                 .findByIdAndUserIdAndAssetType(cardId, userId, AssetType.CARD)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found"));
-        UserSettingsResponse settings = settingsApiClient.getUserSettings(userId).block();
 
-        var personalized = WalletMapper.filterBenefits(card, settings.getPreferredCategories());
-        var others = WalletMapper.filterOtherBenefits(card, settings.getPreferredCategories());
+        // 1) 사용자 선호 카테고리 (이름 리스트)
+        UserSettingsResponse settings = settingsApiClient.getUserSettings(userId).block();
+        List<String> preferred = (settings == null || settings.getPreferredCategories() == null)
+                ? List.of() : settings.getPreferredCategories();
+
+        // 2) 룰 → 화면 아이템으로 변환(카테고리별)
+        Map<String, List<CardBenefitsResponse.BenefitItem>> byCategory =
+                benefitAggregationService.loadBenefitItemsGroupedByCategory(card);
+
+        // 3) personalized / others 분리
+        List<CardBenefitsResponse.BenefitGroup> personalized = new ArrayList<>();
+        List<CardBenefitsResponse.BenefitGroup> others = new ArrayList<>();
+
+        // 선호 카테고리 순서를 보존하며 push
+        Set<String> preferredSet = new LinkedHashSet<>(preferred);
+        for (String cat : preferredSet) {
+            var items = byCategory.get(cat);
+            if (items != null && !items.isEmpty()) {
+                personalized.add(new CardBenefitsResponse.BenefitGroup(cat, items));
+            }
+        }
+        // 나머지
+        for (var entry : byCategory.entrySet()) {
+            if (!preferredSet.contains(entry.getKey())) {
+                others.add(new CardBenefitsResponse.BenefitGroup(entry.getKey(), entry.getValue()));
+            }
+        }
+
         return new CardBenefitsResponse(personalized, others);
     }
 
