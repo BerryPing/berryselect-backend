@@ -54,4 +54,15 @@ public interface UserAssetRepository extends JpaRepository<UserAsset, Long> {
                                     @Param("to") LocalDate to,
                                     Pageable pageable);
 
+    // 만료 예정 기프티콘 조회
+    @EntityGraph(attributePaths = {"product", "product.brandRef"})
+    @Query("""
+    select ua
+      from UserAsset ua
+     where ua.assetType = com.berryselect.backend.wallet.domain.type.AssetType.GIFTICON
+       and ua.gifticonStatus = com.berryselect.backend.wallet.domain.type.GifticonStatus.ACTIVE
+       and ua.expiresAt = :expirationDate
+    """)
+    List<UserAsset> findExpiringGifticons(@Param("expirationDate") LocalDate expirationDate);
+
 }
