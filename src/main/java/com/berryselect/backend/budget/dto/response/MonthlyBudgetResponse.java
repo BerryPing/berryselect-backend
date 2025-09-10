@@ -15,4 +15,6 @@ public class MonthlyBudgetResponse {
     private int amountRemaining; // 남은 금액 ( total - spent )
     private boolean exceeded; // 초과 여부
     private LocalDateTime updatedAt; // 목표 갱신시각
+    private Integer lastMonthSpent; // 지난달 지출 합계
+    private boolean exists;
 }
