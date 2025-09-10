@@ -162,9 +162,16 @@ public class TransactionService {
         Long total = transactionRepository.countTotalTransactionsByMonth(userId, startUtc, endUtc);
         Long used  = transactionRepository.countRecommendationUsedTransactions(userId, startUtc, endUtc);
 
+        log.info("[추천 사용률 계산] userId={}, yearMonth={}, totalTxs={}, usedTxs={}, startUtc={}, endUtc={}",
+                userId, yearMonth, total, used, startUtc, endUtc);
+
         if (total == 0) {
             return 0.0;
         }
+
+        double rate = used.doubleValue() / total.doubleValue();
+        log.info("[추천 사용률 결과] userId={}, yearMonth={}, rate={}", userId, yearMonth, rate);
+
         return used.doubleValue() / total.doubleValue();
     }
 

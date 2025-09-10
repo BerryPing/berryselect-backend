@@ -3,6 +3,7 @@ package com.berryselect.backend.common.exception;
 import com.berryselect.backend.common.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -107,17 +110,6 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(e.getMessage(), "INVALID_STATE"));
     }
 
-    // 일반적인 RuntimeException 처리
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse<Void>> handleRuntimeException(
-            RuntimeException e, HttpServletRequest request) {
-
-        log.error("Unexpected runtime exception: {} | URI: {}", e.getMessage(), request.getRequestURI(), e);
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.error("서버 내부 오류가 발생했습니다.", "INTERNAL_ERROR"));
-    }
-
     // 모든 예외의 최종 처리 (예상하지 못한 예외)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e, HttpServletRequest request) {
@@ -126,5 +118,27 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("알 수 없는 오류가 발생했습니다.", "UNKNOWN_ERROR"));
+    }
+
+    // 상태코드 보존
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResponseStatusException(
+            ResponseStatusException e, HttpServletRequest request) {
+
+        log.warn("ResponseStatusException: {} | URI: {}", e.getMessage(), request.getRequestURI());
+
+        HttpStatusCode status = e.getStatusCode();
+        String reason = e.getReason() != null ? e.getReason() : e.getMessage();
+
+        // 상태 코드별 에러 코드 매핑
+        String code;
+        int sc = status.value();
+        if (sc == 401) code = "UNAUTHORIZED";
+        else if (sc == 403) code = "FORBIDDEN";
+        else if (sc == 404) code = "NOT_FOUND";
+        else code = "ERROR";
+
+        return ResponseEntity.status(status)
+                .body(ApiResponse.error(reason, code));
     }
 }

@@ -1,6 +1,6 @@
 package com.berryselect.backend.wallet.adapter.client;
 
-import com.berryselect.backend.wallet.dto.response.UserSettingsResponse;
+import com.berryselect.backend.auth.dto.response.UserSettingsResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
