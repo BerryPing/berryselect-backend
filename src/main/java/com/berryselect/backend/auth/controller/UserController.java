@@ -7,11 +7,13 @@ import com.berryselect.backend.auth.repository.UserRepository;
 import com.berryselect.backend.auth.service.UserProfileService;
 import com.berryselect.backend.auth.service.UserSettingsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
+
 
 @RestController
 @RequiredArgsConstructor
@@ -21,6 +23,17 @@ public class UserController {
     private final UserRepository userRepository;
     private final UserProfileService userProfileService;
     private final UserSettingsService userSettingsService;
+
+    private Long requireUserId(String principal) {
+        if (principal == null || principal.isBlank()) {
+            throw new ResponseStatusException(UNAUTHORIZED, "인증이 필요합니다.");
+        }
+        try {
+            return Long.parseLong(principal);
+        } catch (NumberFormatException e) {
+            throw new ResponseStatusException(UNAUTHORIZED, "올바르지 않은 사용자 토큰입니다.");
+        }
+    }
 
     // Authorization : Bearer <우리 JWT> 필요 (SecurityConfig에 의해 보호됨)
     @GetMapping("/me")
@@ -38,41 +51,23 @@ public class UserController {
         );
     }
 
+
     // GET /users/me/settings
     @GetMapping("/me/settings")
     public ResponseEntity<UserSettingsResponse> getSettings(
-            Authentication auth,
-            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId  // Security 연동 전
-            // @AuthenticationPrincipal SecurityPrincipal principal  // Security 연동 후
+            @AuthenticationPrincipal String principal
     ) {
-        Long userId = resolveUserId(auth, headerUserId);  // Security 연동 전
-        // Long userId = principal.getId();   // Security 연동 후
-
+        Long userId = requireUserId(principal);
         return ResponseEntity.ok(userSettingsService.getSettings(userId));
     }
-
 
     // PUT /users/me/settings
     @PutMapping("/me/settings")
     public ResponseEntity<UserSettingsResponse> updateSettings(
-            Authentication auth,
-            @RequestHeader(value = "X-User-Id", required = false) Long headerUserId,  // Security 연동 전
-            // @AuthenticationPrincipal SecurityPrincipal principal,  // Security 연동 후
+            @AuthenticationPrincipal String principal,
             @RequestBody UpdateUserSettingsRequest req
     ) {
-
-        Long userId = resolveUserId(auth, headerUserId);  // Security 연동 전
-        // Long userId = principal.getId();  // Security 연동 후
-
+        Long userId = requireUserId(principal);
         return ResponseEntity.ok(userSettingsService.updateSettings(userId, req));
-    }
-
-    // Security 연동 전
-    private Long resolveUserId(Authentication auth, Long headerUserId) {
-        if (auth != null && auth.getName() != null && auth.getName().matches("\\d+")) {
-            return Long.valueOf(auth.getName());
-        }
-        if (headerUserId != null) return headerUserId;
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "user not resolved");
     }
 }
