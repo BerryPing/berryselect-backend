@@ -16,6 +16,7 @@ public class RecommendationOptionItemResponse {
     private String subtitle;
     private Integer appliedValue;
     private Short sortOrder;
+    private String issuer;
 
     public static RecommendationOptionItemResponse fromEntity(RecommendationOptionItem item) {
         return RecommendationOptionItemResponse.builder()

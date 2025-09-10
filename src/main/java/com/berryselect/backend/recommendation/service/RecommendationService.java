@@ -8,12 +8,15 @@ import com.berryselect.backend.recommendation.domain.RecommendationOption;
 import com.berryselect.backend.recommendation.domain.RecommendationOptionItem;
 import com.berryselect.backend.recommendation.domain.RecommendationSession;
 import com.berryselect.backend.recommendation.dto.request.RecommendationRequest;
+import com.berryselect.backend.recommendation.dto.response.RecommendationOptionItemResponse;
+import com.berryselect.backend.recommendation.dto.response.RecommendationOptionResponse;
 import com.berryselect.backend.recommendation.dto.response.RecommendationResponse;
 import com.berryselect.backend.recommendation.repository.RecommendationOptionItemRepository;
 import com.berryselect.backend.recommendation.repository.RecommendationOptionRepository;
 import com.berryselect.backend.recommendation.repository.RecommendationSessionRepository;
 import com.berryselect.backend.wallet.domain.UserAsset;
 import com.berryselect.backend.wallet.repository.UserAssetRepository;
+import com.berryselect.backend.wallet.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -96,7 +100,7 @@ public class RecommendationService {
                     RecommendationOptionItem item = RecommendationOptionItem.builder()
                             .option(option)
                             .componentType(ua.getAssetType().name())
-                            .componentRefId(ua.getId())
+                            .componentRefId(ua.getProduct().getId())
                             .ruleId(bestRule.ruleId())
                             .title(ua.getProduct().getName())
                             .appliedValue(bestRule.appliedValue())
@@ -170,4 +174,41 @@ public class RecommendationService {
 
         return RecommendationResponse.fromEntity(session);
     }
+
+    private RecommendationOptionResponse toOptionResponse(RecommendationOption option) {
+        List<RecommendationOptionItemResponse> itemResponses = option.getItems().stream()
+                .map(this::toItemResponse)
+                .collect(Collectors.toList());
+
+        return RecommendationOptionResponse.builder()
+                .optionId(option.getOptionId())
+                .expectedPay(option.getExpectedPay())
+                .expectedSave(option.getExpectedSave())
+                .rankOrder(option.getRankOrder())
+                .items(itemResponses)
+                .build();
+    }
+
+    private final ProductRepository productRepository;
+
+    private RecommendationOptionItemResponse toItemResponse(RecommendationOptionItem item) {
+        RecommendationOptionItemResponse.RecommendationOptionItemResponseBuilder builder =
+                RecommendationOptionItemResponse.builder()
+                        .itemId(item.getItemId())
+                        .componentType(item.getComponentType())
+                        .componentRefId(item.getComponentRefId())
+                        .ruleId(item.getRuleId())
+                        .title(item.getTitle())
+                        .subtitle(item.getSubtitle())
+                        .appliedValue(item.getAppliedValue())
+                        .sortOrder(item.getSortOrder());
+
+        // ✅ componentRefId → Product.issuer 매핑
+        productRepository.findById(item.getComponentRefId())
+                .ifPresent(product -> builder.issuer(product.getIssuer()));
+
+        return builder.build();
+    }
+
+
 }
