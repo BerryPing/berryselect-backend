@@ -38,7 +38,7 @@ public class SecurityConfig {
                 .httpBasic(hb -> hb.disable())
                 // 인가규칙
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**","/actuator/health", "/myberry/reports/**", "/transactions/**", "recommendations/**", "/wallet/**", "/recommendations/**", "/users/me/settings").permitAll()
+                        .requestMatchers("/auth/**","/actuator/health", "/myberry/reports/**", "/transactions/**", "/wallet/**", "/recommendations/**", "/users/me/settings", "/merchants/**").permitAll()
                         .anyRequest().authenticated() // 나머지는 JWT 필요, 토큰 없으면 401
                 )
                 .exceptionHandling(eh -> eh
