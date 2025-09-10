@@ -88,7 +88,8 @@ public class OpenAiService {
         prompt.append("1. 카테고리별 지출 패턴 (어떤 카테고리에 가장 많이/적게 지출했는지)\n");
         prompt.append("2. 절약 성과 평가\n");
         prompt.append("3. 개선할 수 있는 절약 방법 제안\n\n");
-        prompt.append("친근하고 도움이 되는 톤으로 300자 이내로 작성해주세요.");
+        prompt.append("친근하고 도움이 되는 톤으로 250자 이내로 작성해주세요.");
+        prompt.append("단, 카테고리 1은 '카페', 카테고리 2는 '편의점', 카테고리 3은 '교통', 카테고리 4는 '쇼핑', 카테고리 5는 '음식', 카테고리 6은 '기타'로 변경해서 작성해주세요.");
 
         return prompt.toString();
     }
