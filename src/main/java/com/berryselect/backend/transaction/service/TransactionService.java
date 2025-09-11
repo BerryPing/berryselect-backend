@@ -1,5 +1,7 @@
 package com.berryselect.backend.transaction.service;
 
+import com.berryselect.backend.budget.domain.MonthlyCategorySummary;
+import com.berryselect.backend.budget.repository.MonthlyCategorySummaryRepository;
 import com.berryselect.backend.merchant.domain.Category;
 import com.berryselect.backend.merchant.repository.CategoryRepository;
 import com.berryselect.backend.merchant.repository.MerchantRepository;
@@ -48,6 +50,7 @@ public class TransactionService {
     private final UserAssetRepository userAssetRepository;
     private final RecommendationSessionRepository sessionRepository;
     private final RecommendationOptionRepository optionRepository;
+    private final MonthlyCategorySummaryRepository monthlyCategorySummaryRepository;
 
     @Transactional
     public TransactionResponse createTransaction(TransactionRequest req, Long userId) {
@@ -68,6 +71,7 @@ public class TransactionService {
                 .sessionId(session.getSessionId())
                 .optionId(option.getOptionId())
                 .paidAmount(req.getPaidAmount())
+                .categoryId(req.getCategoryId())
                 .txTime(Instant.now())
                 .build();
         transactionRepository.save(tx);
@@ -84,6 +88,10 @@ public class TransactionService {
                         .build())
                 .toList();
         appliedBenefitRepository.saveAll(benefits);
+
+        // ✅ 월별 카테고리 요약 업데이트
+        updateMonthlyCategorySummary(tx, benefits);
+
 
         return TransactionResponse.builder()
                 .txId(tx.getTxId())
@@ -290,6 +298,52 @@ public class TransactionService {
 
     private String generateBenefitDescription(AppliedBenefit benefit) {
         return String.format("%,d원 절약", benefit.getSavedAmount());
+    }
+
+    /**
+     * 월별 카테고리 요약 업데이트
+     */
+    private void updateMonthlyCategorySummary(Transaction transaction, List<AppliedBenefit> benefits) {
+        if (transaction.getCategoryId() == null) {
+            log.warn("거래에 카테고리가 없어 월별 요약 업데이트를 건너뜁니다. txId: {}", transaction.getTxId());
+            return;
+        }
+
+        // 년월 계산 (KST 기준)
+        String yearMonth = transaction.getTxTime()
+                .atZone(ZoneId.of("Asia/Seoul"))
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM"));
+
+        // 총 절약 금액 계산
+        Long totalSaved = benefits.stream()
+                .mapToLong(AppliedBenefit::getSavedAmount)
+                .sum();
+
+        log.info("월별 카테고리 요약 업데이트 - userId: {}, yearMonth: {}, categoryId: {}, spent: {}, saved: {}",
+                transaction.getUserId(), yearMonth, transaction.getCategoryId(),
+                transaction.getPaidAmount(), totalSaved);
+
+        // 기존 요약 조회 또는 새로 생성
+        MonthlyCategorySummary summary = monthlyCategorySummaryRepository
+                .findByUserIdAndYearMonthAndCategoryId(
+                        transaction.getUserId(),
+                        yearMonth,
+                        transaction.getCategoryId())
+                .orElse(MonthlyCategorySummary.builder()
+                        .userId(transaction.getUserId())
+                        .yearMonth(yearMonth)
+                        .categoryId(transaction.getCategoryId())
+                        .amountSpent(0L)
+                        .amountSaved(0L)
+                        .txCount(0)
+                        .build());
+
+        summary.addTransaction(transaction.getPaidAmount().longValue(), totalSaved);
+
+        monthlyCategorySummaryRepository.save(summary);
+
+        log.info("월별 카테고리 요약 업데이트 완료 - 총지출: {}, 총절약: {}, 거래건수: {}",
+                summary.getAmountSpent(), summary.getAmountSaved(), summary.getTxCount());
     }
 }
 

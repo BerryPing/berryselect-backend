@@ -16,8 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 // 매 요청마다 Authorization 헤더의 Bearer 토큰을 검증하고,
 // 유효하면 SecurityContext에 인증 정보를 세팅한다.
@@ -33,8 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path = request.getServletPath();
         return path.startsWith("/auth")
                 || path.startsWith("/actuator/health")
-                || path.startsWith("/merchants") // 👈 가맹점 검색 API 전체 제외
-                || path.startsWith("/recommendations");
+                || path.startsWith("/merchants"); // 👈 가맹점 검색 API 전체 제외
     }
 
     @Override
