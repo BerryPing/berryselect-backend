@@ -1,10 +1,7 @@
 package com.berryselect.backend.budget.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -12,6 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "monthly_category_summaries")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -45,4 +43,12 @@ public class MonthlyCategorySummary {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(3)")
     private LocalDateTime updatedAt;
+
+    // 거래 추가 메서드 (비즈니스 로직)
+    public void addTransaction(Long spentAmount, Long savedAmount) {
+        this.amountSpent += spentAmount;
+        this.amountSaved += savedAmount;
+        this.txCount += 1;
+        // updatedAt은 @UpdateTimestamp로 자동 업데이트됨
+    }
 }
