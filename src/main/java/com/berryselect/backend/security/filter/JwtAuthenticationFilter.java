@@ -34,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return path.startsWith("/auth")
                 || path.startsWith("/actuator/health")
                 || path.startsWith("/merchants") // 👈 가맹점 검색 API 전체 제외
-                //|| path.startsWith("/myberry")
                 || path.startsWith("/recommendations");
     }
 
