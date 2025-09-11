@@ -53,6 +53,7 @@ public class JwtProvider {
         return createAccessToken(subject, roles);
     }
 
+
     public String createAccessToken(String subject, List<String> roles){
         Date now = new Date();
         Date exp = new Date(now.getTime() + accessTokenExpMs);
@@ -65,6 +66,40 @@ public class JwtProvider {
                 .setIssuer(issuer)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String createAccessToken(Long userId, String subject, List<String> roles){
+        Date now = new Date();
+        Date exp = new Date(now.getTime() + accessTokenExpMs);
+
+        return Jwts.builder()
+                .setSubject(subject)        // 예: providerUserId 또는 username
+                .claim("uid", userId)       // ★ 여기에 PK 심기
+                .claim("roles", roles)
+                .setIssuedAt(now)
+                .setExpiration(exp)
+                .setIssuer(issuer)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    public Long getUserId(String token) {
+        Claims claims = parseClaims(token);
+
+        Object uid = claims.get("uid");
+        if (uid instanceof Number n) {
+            return n.longValue();
+        }
+        if (uid instanceof String s && !s.isBlank()) {
+            try { return Long.parseLong(s); } catch (NumberFormatException ignored) {}
+        }
+
+        // fallback: sub가 숫자인 경우(구버전 토큰 호환)
+        String sub = claims.getSubject();
+        if (sub != null) {
+            try { return Long.parseLong(sub); } catch (NumberFormatException ignored) {}
+        }
+        return null; // 못 찾으면 null
     }
 
     public String createTempAccessToken(String subject, Collection<? extends GrantedAuthority> authorities) {
