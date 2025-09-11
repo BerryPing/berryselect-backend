@@ -14,6 +14,8 @@ public class TransactionResponse {
     private Long merchantId;
     private Integer paidAmount;
     private Instant txTime;
+    private Long categoryId;
+
     private List<AppliedBenefitDto> appliedBenefits;
 
     @Data
