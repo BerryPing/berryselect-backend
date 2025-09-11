@@ -96,7 +96,7 @@ public class NotificationService {
     @Transactional
     public void sendBudgetAlert(Long userId, String budgetInfo) {
         String title = "예산 초과 알림";
-        String body = String.format("설정한 예산을 초과했습니다. %s", budgetInfo);
+        String body = String.format("설정한 예산 %s원 초과", budgetInfo);
         createAndSendNotification(userId, NotificationType.BUDGET_ALERT, title, body);
     }
 
@@ -104,7 +104,7 @@ public class NotificationService {
     @Transactional
     public void sendGifticonExpireAlert(Long userId, String gifticonName, int daysLeft) {
         String title = "기프티콘 만료 알림";
-        String body = String.format("%s 기프티콘이 %d일 후 만료됩니다.", gifticonName, daysLeft);
+        String body = String.format("%d일 후 %s 기프티콘 만료", daysLeft, gifticonName);
         createAndSendNotification(userId, NotificationType.GIFTICON_EXPIRE, title, body);
     }
 

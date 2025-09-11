@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class WalletController {
     private final WalletService walletService;
-    private static final long DEV_USER_ID = 1L;  // Security 연동 전
+    private static final long DEV_USER_ID = 2L;  // Security 연동 전
 
 //    private Long toUserId(String principal) {
 //        return Long.parseLong(principal);
