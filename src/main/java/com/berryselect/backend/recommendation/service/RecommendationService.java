@@ -15,6 +15,7 @@ import com.berryselect.backend.recommendation.repository.RecommendationSessionRe
 import com.berryselect.backend.wallet.domain.UserAsset;
 import com.berryselect.backend.wallet.repository.UserAssetRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -153,7 +154,7 @@ public class RecommendationService {
     }
 
     @Transactional
-    public RecommendationResponse chooseOption(Long sessionId, Long optionId) {
+    public RecommendationResponse chooseOption(Long sessionId, Long optionId, Long userId) {
         RecommendationSession session = sessionRepository.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid sessionId: " + sessionId));
 
@@ -162,6 +163,10 @@ public class RecommendationService {
 
         if (!option.getSession().getSessionId().equals(sessionId)) {
             throw new IllegalArgumentException("Option does not belong to this session");
+        }
+
+        if (!session.getUserId().equals(userId)) {
+            throw new AccessDeniedException("본인 세션이 아니므로 옵션을 선택할 수 없습니다.");
         }
 
         // ✅ 선택 확정
