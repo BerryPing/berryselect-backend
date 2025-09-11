@@ -61,11 +61,11 @@ public class UserController {
     }
 
     // Security 연동 전
-    private Long resolveUserId(Authentication auth, Long headerUserId) {
-        if (auth != null && auth.getName() != null && auth.getName().matches("\\d+")) {
-            return Long.valueOf(auth.getName());
-        }
-        if (headerUserId != null) return headerUserId;
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "user not resolved");
-    }
+//    private Long resolveUserId(Authentication auth, Long headerUserId) {
+//        if (auth != null && auth.getName() != null && auth.getName().matches("\\d+")) {
+//            return Long.valueOf(auth.getName());
+//        }
+//        if (headerUserId != null) return headerUserId;
+//        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "user not resolved");
+//    }
 }
