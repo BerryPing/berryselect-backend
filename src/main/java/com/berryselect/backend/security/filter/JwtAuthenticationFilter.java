@@ -1,5 +1,6 @@
 package com.berryselect.backend.security.filter;
 
+import com.berryselect.backend.security.dto.AuthUser;
 import com.berryselect.backend.security.util.JwtProvider;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -33,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return path.startsWith("/auth")
                 || path.startsWith("/actuator/health")
                 || path.startsWith("/merchants") // 👈 가맹점 검색 API 전체 제외
-                || path.startsWith("/myberry/reports")
+                //|| path.startsWith("/myberry")
                 || path.startsWith("/transactions")
                 || path.startsWith("/recommendations");
     }
@@ -46,26 +47,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if(auth != null && auth.startsWith("Bearer ")) {
             String token = auth.substring(7);
             try{
-                // 1. 토큰 검증 (서명/만료/issuer 등)
-                if(jwtProvider.validate(token)){
-                    // 2. 클레임에서 사용자/권한 꺼내기
-                    String subject = jwtProvider.getSubject(token);
-                    List<String> roles = jwtProvider.getRoles(token);
+                Long userId = jwtProvider.getUserId(token);   // 토큰 클레임에서 userId 꺼내도록 JwtProvider 수정 필요
+                String name = jwtProvider.getSubject(token);
 
-                    // 3. 권한 변환 (roles(List<String>) -> GrantedAuthority 컬렉션으로 변환 = 타입 변환)
-                    var authorities = roles.stream()
-                            .map(SimpleGrantedAuthority::new)
-                            .collect(Collectors.toList());
+                var authorities = jwtProvider.getRoles(token).stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .toList();
 
-                    // 4. 인증 객체 생성 ( 비밀번호는 필요 없음 )
-                    var authentication = new UsernamePasswordAuthenticationToken(subject, null, authorities);
-                    authentication.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(req)
-                    );
+                // principal을 AuthUser DTO로 세팅
+                AuthUser principal = new AuthUser(userId, name);
 
-                    // 5. 인증 정보를 스프링 컨텍스트에 주입 -> 컨트롤러 단에서 "인증된 사용자"로 동작
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+                var authentication =
+                        new UsernamePasswordAuthenticationToken(principal, null, authorities);
+
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+//                // 1. 토큰 검증 (서명/만료/issuer 등)
+//                if(jwtProvider.validate(token)){
+//                    // 2. 클레임에서 사용자/권한 꺼내기
+//                    String subject = jwtProvider.getSubject(token);
+//                    List<String> roles = jwtProvider.getRoles(token);
+//
+//                    // 3. 권한 변환 (roles(List<String>) -> GrantedAuthority 컬렉션으로 변환 = 타입 변환)
+//                    var authorities = roles.stream()
+//                            .map(SimpleGrantedAuthority::new)
+//                            .collect(Collectors.toList());
+//
+//                    // 4. 인증 객체 생성 ( 비밀번호는 필요 없음 )
+//                    var authentication = new UsernamePasswordAuthenticationToken(subject, null, authorities);
+//                    authentication.setDetails(
+//                            new WebAuthenticationDetailsSource().buildDetails(req)
+//                    );
+//
+//                    // 5. 인증 정보를 스프링 컨텍스트에 주입 -> 컨트롤러 단에서 "인증된 사용자"로 동작
+//                    SecurityContextHolder.getContext().setAuthentication(authentication);
+//                }
             }
             catch(JwtException | IllegalArgumentException e){
                 // 토큰 문제면 인증 정보 세팅하지 않고 넘김 -> 보호 차원 접근 시 401/403은 핸들러가 처리

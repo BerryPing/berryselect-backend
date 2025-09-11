@@ -63,4 +63,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             @Param("start") Instant start,
             @Param("end") Instant end
     );
+
+    // 월 기간 합계 ( 전체 거래 금액 합 )
+    @Query("""
+        SELECT COALESCE(SUM(t.paidAmount), 0)
+        FROM Transaction t
+        WHERE t.userId = :userId
+        AND t.txTime >= :start
+        AND t.txTime < :end
+        AND t.paidAmount > 0
+""")
+    Long sumAmountByUserAndPeriod(
+            @Param("userId") Long userId,
+            @Param("start") Instant start,
+            @Param("end") Instant end
+    );
+
 }
