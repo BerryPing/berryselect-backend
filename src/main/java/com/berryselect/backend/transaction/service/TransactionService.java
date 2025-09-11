@@ -68,6 +68,7 @@ public class TransactionService {
                 .sessionId(session.getSessionId())
                 .optionId(option.getOptionId())
                 .paidAmount(req.getPaidAmount())
+                .categoryId(req.getCategoryId())
                 .txTime(Instant.now())
                 .build();
         transactionRepository.save(tx);
