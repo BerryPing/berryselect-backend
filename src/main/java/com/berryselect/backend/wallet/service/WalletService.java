@@ -67,7 +67,7 @@ public class WalletService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Card not found"));
 
         // 1) 사용자 선호 카테고리 (이름 리스트)
-        UserSettingsResponse settings = settingsApiClient.getUserSettings(userId).block();
+        UserSettingsResponse settings = settingsApiClient.getUserSettings().block();
         List<String> preferred = (settings == null || settings.getPreferredCategories() == null)
                 ? List.of() : settings.getPreferredCategories();
 
