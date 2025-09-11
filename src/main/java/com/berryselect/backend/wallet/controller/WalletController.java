@@ -1,25 +1,24 @@
 package com.berryselect.backend.wallet.controller;
 
+import com.berryselect.backend.security.dto.AuthUser;
 import com.berryselect.backend.wallet.domain.type.GifticonStatus;
 import com.berryselect.backend.wallet.dto.request.GifticonCreateRequest;
 import com.berryselect.backend.wallet.dto.request.MembershipCreateRequest;
 import com.berryselect.backend.wallet.dto.response.*;
 import com.berryselect.backend.wallet.service.WalletService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/wallet")
 @RequiredArgsConstructor
 public class WalletController {
     private final WalletService walletService;
-
-    private Long toUserId(String principal) {
-        return Long.parseLong(principal);
-    }
 
     /**
      * =====================
@@ -28,27 +27,28 @@ public class WalletController {
      */
     @GetMapping("/cards")
     public ResponseEntity<WalletSummaryResponse> listCards(
-            @AuthenticationPrincipal String principal
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        Long userId = toUserId(principal);
+        log.info("[WalletController] listCards userId={}", authUser != null ? authUser.getId() : null);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.getCardList(userId));
     }
 
     @GetMapping("/cards/{cardId}")
     public ResponseEntity<AssetResponse> getCard(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long cardId
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.getCardDetail(userId, cardId));
     }
 
     @GetMapping("/cards/{cardId}/benefits")
     public ResponseEntity<CardBenefitsResponse> getCardBenefits(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long cardId
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.getCardBenefits(userId, cardId));
     }
 
@@ -59,36 +59,36 @@ public class WalletController {
      */
     @GetMapping("/memberships")
     public ResponseEntity<MembershipSummaryResponse> listMemberships(
-            @AuthenticationPrincipal String principal
+            @AuthenticationPrincipal AuthUser authUser
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.getMembershipList(userId));
     }
 
     @GetMapping("/memberships/{membershipId}")
     public ResponseEntity<MembershipResponse> getMembership(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long membershipId
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.getMembershipDetail(userId, membershipId));
     }
 
     @PostMapping("/memberships")
     public ResponseEntity<MembershipResponse> createMembership(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestBody MembershipCreateRequest req
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.createMembership(userId, req));
     }
 
     @DeleteMapping("/memberships/{membershipId}")
     public ResponseEntity<Void> deleteMembership(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long membershipId
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         walletService.deleteMembership(userId, membershipId);
         return ResponseEntity.noContent().build();
     }
@@ -100,43 +100,43 @@ public class WalletController {
      */
     @GetMapping("/gifticons")
     public ResponseEntity<GifticonSummaryResponse> listGifticons(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestParam(name = "status", required = false) GifticonStatus status,
             @RequestParam(name = "soonDays", required = false) Integer soonDays,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "50") int size,
             @RequestParam(name = "sort", defaultValue = "expiresAt,asc") String sort
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.getGifticonList(userId, status, soonDays, page, size, sort));
     }
 
     @GetMapping("/gifticons/{gifticonId}")
     public ResponseEntity<GifticonResponse> getGifticon(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gifticonId
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.getGifticonDetail(userId, gifticonId));
     }
 
     // 1. 기프티콘 등록 - 번호 등록
     @PostMapping(value = "/gifticons", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GifticonResponse> createGifticonJson(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @RequestBody GifticonCreateRequest req
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.createGifticon(userId, req));
     }
 
     // 2. 기프티콘 등록 - 이미지 등록 (이미지는 읽기만 하고 DB 저장 X)
     @PostMapping(value = "/gifticons", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<GifticonResponse> createGifticonMultipart(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @ModelAttribute GifticonCreateRequest req
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         if (req.getImage() != null && !req.getImage().isEmpty()) {
             try {
                 byte[] bytes = req.getImage().getBytes();
@@ -148,34 +148,34 @@ public class WalletController {
 
     @PutMapping("/gifticons/{gifticonId}")
     public ResponseEntity<GifticonResponse> updateGifticonStatus(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gifticonId,
             @RequestParam("status") GifticonStatus gifticonStatus
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         return ResponseEntity.ok(walletService.updateGifticonStatus(userId, gifticonId, gifticonStatus));
     }
 
     @DeleteMapping("/gifticons/{gifticonId}")
     public ResponseEntity<Void> deleteGifticon(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gifticonId
     ) {
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         walletService.deleteGifticon(userId, gifticonId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/gifticons/{gifticonId}/redeem")
     public ResponseEntity<Void> redeemGifticon(
-            @AuthenticationPrincipal String principal,
+            @AuthenticationPrincipal AuthUser authUser,
             @PathVariable Long gifticonId,
             @RequestParam Integer usedAmount
     ) {
         if (usedAmount == null || usedAmount <= 0) {
             return ResponseEntity.badRequest().build();
         }
-        Long userId = toUserId(principal);
+        Long userId = authUser.getId();
         walletService.redeemGifticon(userId, gifticonId, usedAmount);
         return ResponseEntity.noContent().build();
     }
