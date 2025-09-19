@@ -1,4 +1,7 @@
 package com.berryselect.backend.wallet.repository;
 
-public class GifticonRedemptionRepository {
+import com.berryselect.backend.wallet.domain.GifticonRedemption;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface GifticonRedemptionRepository extends JpaRepository<GifticonRedemption, Long> {
 }
